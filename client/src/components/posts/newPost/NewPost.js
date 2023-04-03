@@ -11,7 +11,7 @@ const NewPost = () => {
   return (
     <div id="newPost" className={classes["newpost-container"]}>
       <div className={classes.newpost}>
-        {!authData && <h3>Sign In to continue...</h3>}
+        {!authData && <h3>Sign In to create a post...</h3>}
         {/* {authData && !showForm && (
           <button className={classes.tweet} onClick={showFormHandler}>
             Tweet Something New...
