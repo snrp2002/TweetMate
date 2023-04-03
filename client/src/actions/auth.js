@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { AUTH } from '../constants/actionTypes';
 
-const API = axios.create({baseURL:"http://localhost:5000/auth"});
+const API = axios.create({baseURL:"https://tweetmate.onrender.com/auth"});
 
 export const signUpAction = (formData, navigate) => async(dispatch) => {
     try{

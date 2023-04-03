@@ -13,7 +13,7 @@ const UserPost = (props) => {
   useEffect(() => {
     const fetchData = async () => {
       const response = await axios.get(
-        "http://localhost:5000/posts/post/" + postId
+        "https://tweetmate.onrender.com/posts/post/" + postId
       );
       setPost(response.data);
     };

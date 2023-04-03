@@ -11,7 +11,7 @@ const Profile = () => {
     const [user, setUser] = useState(null);
     useEffect(() => {
         const fetchData = async() => {
-            const response = await axios.get('http://localhost:5000/user/'+userId);
+            const response = await axios.get('https://tweetmate.onrender.com/user/'+userId);
             setUser(response.data);
         }
         fetchData();
