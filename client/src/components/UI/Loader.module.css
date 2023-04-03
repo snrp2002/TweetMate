@@ -2,7 +2,21 @@
   text-align: center;
   margin-top: 100px;
 }
+.loader img {
+  width: 100px;
+}
 .loader p {
   color: white;
   font-weight: 500;
+}
+@media only screen and (max-width: 550px) {
+  .loader {
+    margin-top: 20px;
+  }
+  .loader img {
+    width: 50px;
+  }
+  .loader p {
+    font-size: 0.9rem;
+  }
 }
