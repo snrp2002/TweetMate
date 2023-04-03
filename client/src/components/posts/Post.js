@@ -115,7 +115,7 @@ const Post = (props) => {
             <div className={classes.actionButton} onClick={sharePostHandler}>
               <WhatsappShareButton
                 id="share"
-                url={`http://localhost:3000/post/${props.post._id}`}
+                url={`https://souvik-tweetmate-91.netlify.app/post/${props.post._id}`}
                 title={`Check out this TweetMate Post by ${props.post.userName} : `}
                 style={{ margin: 0 }}
               >
