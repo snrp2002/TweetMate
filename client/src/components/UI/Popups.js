@@ -7,10 +7,10 @@ export const Confirm = Swal.mixin({
   background: "#3a3b3c",
   color: "#fff",
   customClass: {
-    popup: classes.confirm,
-    title: classes.confirmTitle,
-    actions: classes.confirmActions,
-    icon: classes.confirmIcon
+    popup: `${classes.confirm}`,
+    title: `${classes.confirmTitle}`,
+    actions: `${classes.confirmActions}`,
+    icon: `${classes.confirmIcon}`
   },
 });
 export const Notification = Swal.mixin({
@@ -23,8 +23,8 @@ export const Notification = Swal.mixin({
   padding: "10px",
   background: "#3a3b3c",
   customClass: {
-    popup: classes.notification,
-    timerProgressBar: classes.notificationTimerProgressBar
+    popup: `${classes.notification}`,
+    timerProgressBar: `${classes.notificationTimerProgressBar}`
   },
   color: "white",
   didOpen: (toast) => {
