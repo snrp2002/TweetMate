@@ -1,0 +1,28 @@
+button {
+  width: 100%;
+  color: white;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 10px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  margin: 5px 0;
+  font-family: inherit;
+}
+.buttonNormal {
+  background-color: #1877f2;
+  border: 1px solid #1877f2;
+}
+.buttonNormal:hover {
+  border: 1px solid white;
+  box-shadow: 0px 1px 6px black;
+}
+.buttonAlt {
+  border: 1px solid red;
+  background-color: inherit;
+  color: red;
+}
+.buttonAlt:hover {
+  box-shadow: 0px 1px 6px black;
+}

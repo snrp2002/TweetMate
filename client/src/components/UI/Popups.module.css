@@ -1,0 +1,20 @@
+.confirm {
+  border: 2px solid black;
+  border-radius: 12px;
+}
+.confirmTitle {
+  padding: 0 18px;
+}
+.confirmActions {
+  flex-wrap: nowrap;
+}
+.confirmIcon {
+  margin: 20px auto 20px;
+}
+.notification {
+  border: 2px solid black;
+}
+.notificationTimerProgressBar {
+  background-color: white;
+  height: 1px;
+}

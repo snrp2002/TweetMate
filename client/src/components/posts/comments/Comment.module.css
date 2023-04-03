@@ -1,0 +1,33 @@
+.commentContainer {
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+}
+.commentContainer img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.comment {
+  background-color: #3a3b3c;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 12px;
+  margin: 0 10px;
+  min-width: 150px;
+  overflow-x: hidden;
+}
+.name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+.message {
+  font-size: 0.9rem;
+}
+.time {
+  font-size: 0.6rem;
+  text-align: right;
+}
