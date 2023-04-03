@@ -1,0 +1,100 @@
+a {
+  text-decoration: none;
+}
+.navbar {
+  background-color: #242526;
+  display: flex;
+  border-bottom: 2px solid rgb(90, 90, 90);
+  height: 6vh;
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+.brandName {
+  text-decoration: none;
+  display: flex;
+  font-size: 1.7rem;
+  color: white;
+  font-weight: 600;
+  align-items: center;
+  padding: 0 20px;
+}
+@media only screen and (max-width: 450px) {
+  .brandName {
+    font-size: 1.4rem;
+  }
+  .brandName img {
+    display: none;
+  }
+}
+.brandName img {
+  margin: auto;
+  margin-right: 10px;
+  height: 35px;
+}
+.navOptions {
+  margin-right: 2vw;
+  display: flex;
+}
+.option {
+  margin-right: 5px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 25px;
+  cursor: pointer;
+}
+.option img {
+  height: 20px;
+}
+.option:hover {
+  background-color: #3a3b3c;
+}
+.profile {
+  display: flex;
+  align-items: center;
+}
+.profile img {
+  height: 40px;
+  width: 40px;
+  cursor: pointer;
+  border-radius: 25px;
+}
+.auth {
+  text-decoration: none;
+  font-size: 1rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  background-color: #3a3b3c;
+  border: 1px solid #3a3b3c;
+  padding: 0 10px;
+  border-radius: 6px;
+}
+.auth:hover {
+  border: 1px solid white;
+  box-shadow: 0px 1px 6px black;
+}
+.modal {
+  right: 2vw;
+  top: 8vh;
+}
+.modalContent {
+  padding: 10px;
+  color: white;
+  font-size: 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.modalContent img {
+  height: 20px;
+  margin-right: 10px;
+}
+.modalContent:hover {
+  background-color: #3a3b3c;
+}

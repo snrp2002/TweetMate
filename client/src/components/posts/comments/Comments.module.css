@@ -1,0 +1,18 @@
+.commentsContainer {
+  margin: 10px 5px;
+  max-height: 200px;
+  overflow: scroll;
+  overflow-x: hidden;
+}
+.commentsContainer::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.commentsContainer::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.1);
+}
+.commentsContainer::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: #686868;
+}

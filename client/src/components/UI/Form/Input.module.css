@@ -1,0 +1,65 @@
+input,
+textarea {
+  font-family: inherit;
+}
+.input {
+  margin-bottom: 12px;
+  width: 100%;
+}
+.input label {
+  margin: 5px 10px;
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+}
+.input input[type="text"],
+input[type="password"],
+input[type="email"] {
+  display: block;
+  width: 90%;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  padding: 10px 15px;
+  margin: auto;
+  background-color: #3a3b3c;
+  color: white;
+}
+.input input[type="text"]:focus,
+.input input[type="password"]:focus,
+.input input[type="email"]:focus {
+  border: none;
+  outline: none;
+  background-color: #4e4f50;
+}
+.input input[type="text"]:hover,
+.input input[type="password"]:hover,
+.input input[type="email"]:hover {
+  background-color: #4e4f50;
+}
+
+.input textarea {
+  display: block;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  padding: 10px 15px;
+  margin: auto;
+  background-color: #3a3b3c;
+  color: white;
+  resize: inherit;
+  width: 90%;
+  height: 150px;
+}
+textarea::-webkit-scrollbar {
+  display: none;
+}
+.input textarea:focus {
+  border: none;
+  outline: none;
+  background-color: #4e4f50;
+}
+.input textarea:hover {
+  background-color: #4e4f50;
+}
