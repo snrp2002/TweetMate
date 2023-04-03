@@ -10,11 +10,14 @@
 .postImage {
   height: 100%;
   width: 100%;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
-.postImage img {
+/* .postImage img {
   height: 100%;
   width: 100%;
-}
+} */
 @media (550px <= width <= 700px) {
   .userPost {
     height: 200px;
