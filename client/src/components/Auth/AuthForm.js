@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate} from "react-router-dom";
 import { Button } from "../UI/Form/Button";
 import Input from "../UI/Form/Input";
 import classes from "./AuthForm.module.css";
@@ -8,6 +8,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import googleImage from "../../images/google.png";
 import { signInAction, signUpAction } from "../../actions/auth";
 import axios from "axios";
+
 
 const InitialData = {
   firstName: "",
@@ -17,11 +18,12 @@ const InitialData = {
   confirmPassword: "",
 };
 
-const AuthForm = () => {
+const AuthForm = (props) => {
   const [signUp, setSignUp] = useState(false);
   const [formData, setFormData] = useState(InitialData);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const switchHandler = () => {
     setSignUp((value) => !value);
   };
@@ -34,6 +36,7 @@ const AuthForm = () => {
 
   const formSubmissionHandler = (event) => {
     event.preventDefault();
+    props.setLoader(true);
     if (signUp) dispatch(signUpAction(formData, navigate));
     else dispatch(signInAction(formData, navigate));
     setFormData(InitialData);
@@ -41,6 +44,7 @@ const AuthForm = () => {
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
+      props.setLoader(true);
       const {data} = await axios.get(
         "https://www.googleapis.com/oauth2/v3/userinfo",
         { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
