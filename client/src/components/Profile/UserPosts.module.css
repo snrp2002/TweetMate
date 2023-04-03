@@ -1,0 +1,38 @@
+.postsContainer {
+  margin: 10px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-top: 1px solid #80808066;
+}
+.options {
+  display: flex;
+}
+.option {
+  padding: 10px 5px;
+  display: flex;
+  align-items: center;
+  color: white;
+  margin: 0 20px;
+  border-top: 1px solid #242526;
+}
+.option img {
+  height: 15px;
+  margin-right: 7px;
+}
+.noPosts {
+  color: white;
+  background-color: black;
+  min-height: 100px;
+  width: 100%;
+  text-align: center;
+}
+.userPosts {
+  width: 100%;
+  background-color: black;
+  display: grid;
+  gap: 1%;
+  grid-template-columns: 32% 32% 32%;
+  justify-content: center;
+  padding: 10px 0 20px;
+}

@@ -1,0 +1,8 @@
+.auth {
+  height: 91vh;
+  width: 100%;
+  overflow-y: scroll;
+}
+.auth::-webkit-scrollbar {
+  display: none;
+}

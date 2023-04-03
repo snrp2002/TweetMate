@@ -1,0 +1,8 @@
+.modal {
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 300px;
+}
+.overlay {
+  background-color: rgba(0, 0, 0, 0.75);
+}

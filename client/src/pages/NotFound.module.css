@@ -1,0 +1,29 @@
+.notFound {
+  margin: 50px auto;
+  width: 350px;
+}
+.notFound img {
+  width: 100%;
+}
+.text {
+  text-align: center;
+  color: white;
+}
+.text h1 {
+  font-size: 4rem;
+  margin: 15px 0;
+}
+.text h2 {
+  margin: 10px 0;
+}
+.text h5 {
+  margin: 10px 0 20px;
+}
+.home {
+  font-size: 1.2rem;
+  color: white;
+  text-decoration: underline;
+}
+.home:hover {
+  color: #ff6363;
+}

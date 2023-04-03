@@ -1,0 +1,72 @@
+.user {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding: 20px;
+  align-items: center;
+}
+.userPhoto {
+  margin-right: 6vw;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.userPhoto img {
+  border-radius: 50%;
+  border: 2px solid black;
+  height: 140px;
+  width: 140px;
+}
+.userInfo {
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+.userName {
+  font-size: 1.4rem;
+  display: flex;
+  line-height: 1rem;
+  margin-bottom: 10px;
+  align-items: center;
+  font-weight: 500;
+}
+.userPosts {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.userBio {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.userBio p {
+  margin: 5px 0;
+}
+.edit {
+  margin: 0 5px;
+  border-radius: 50%;
+  padding: 6px 5px 7px 8px;
+  cursor: pointer;
+}
+.edit:hover {
+  background-color: #4e4f50;
+}
+@media only screen and (max-width: 500px) {
+  .userPhoto img {
+    height: 90px;
+    width: 90px;
+  }
+  .userName {
+    font-size: 1.1rem;
+  }
+  .userName img {
+    height: 15px;
+  }
+  .userPosts {
+    font-size: 0.9rem;
+  }
+  .userBio {
+    font-size: 0.8rem;
+  }
+}
