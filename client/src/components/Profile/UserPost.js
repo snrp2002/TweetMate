@@ -26,8 +26,8 @@ const UserPost = (props) => {
     <div className={classes.userPost} onMouseEnter={() => setShow(true)}onMouseLeave={() => setShow(false)}>
       {post 
       ?<>
-        <div className={classes.postImage}>
-          <img src={post.image} alt="postImage" />
+        <div className={classes.postImage} style={{backgroundImage: `url(${post.image})`}}>
+          {/* <img src={post.image} alt="postImage" /> */}
         </div>
         {show &&
         <div className={classes.postElements} onClick={viewPostHandler}>
