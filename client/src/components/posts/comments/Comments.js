@@ -4,6 +4,7 @@ import { useState } from "react";
 import {useDispatch, useSelector} from "react-redux";
 import Comment from "./Comment";
 import { addComments } from "../../../actions/posts";
+import { Notification } from "../../UI/Popups";
 const Comments = (props) => {
   const dispatch = useDispatch();
   const authData = useSelector((state) => state.auth.authData);
@@ -13,12 +14,20 @@ const Comments = (props) => {
   };
   const formSubmissionHandler = (event) =>{
     event.preventDefault();
-    const newComment = {
-      user: authData.user._id,
-      comment: comment
+    if(authData){
+      const newComment = {
+        user: authData.user._id,
+        comment: comment
+      }
+      dispatch(addComments({postId: props.post._id, comment: newComment}));
+      setComment('');
+    }else{
+      Notification.fire({
+        icon: 'warning',
+        text: 'Login to comment the post!'
+      });
+      setComment('');
     }
-    dispatch(addComments({postId: props.post._id, comment: newComment}));
-    setComment('');
   }
   return (
     <div className={classes.commentsContainer}>

@@ -2,7 +2,7 @@ import axios from 'axios';
 import decode from 'jwt-decode';
 import { COMMENT, CREATE, DELETE, FETCH_ALL, UPDATE } from '../constants/actionTypes';
 
-const API = axios.create({baseURL: "http://localhost:5000"});
+const API = axios.create({baseURL: "https://tweetmate.onrender.com"});
 
 API.interceptors.request.use((req) => {
     if(localStorage.getItem('user')){

@@ -39,15 +39,8 @@ const Post = (props) => {
     }
   };
   const commentPostHandler = () => {
-    if(!authData){
-      Notification.fire({
-        icon: 'warning',
-        text: 'Login to comment the post!'
-      })
-    }else{
-    setShowComments((state) => !state);
     dispatch(getComments(props.post._id));
-    }
+    setShowComments((state) => !state);
   };
   const sharePostHandler = () => {
     document.getElementById("share").click();
