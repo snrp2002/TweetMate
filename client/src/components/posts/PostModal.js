@@ -45,7 +45,7 @@ const PostModal = (props) => {
     });
   };
   const copyLinkHandler = () =>{
-    navigator.clipboard.writeText(`http://localhost:3000/post/${props.post._id}`);
+    navigator.clipboard.writeText(`https://souvik-tweetmate-91.netlify.app/post/${props.post._id}`);
     Notification.fire({
       icon: 'success',
       text: "Link copied!"
