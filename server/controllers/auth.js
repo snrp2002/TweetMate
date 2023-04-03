@@ -27,7 +27,7 @@ export const signIn = async(req, res) => {
                 return;
             }
         }
-        const token = jwt.sign({email: user.email, _id: user._id}, 'test', {expiresIn: '1hr'});    
+        const token = jwt.sign({email: user.email, _id: user._id}, process.env.JWT_SECRET, {expiresIn: '1hr'});    
         res.status(200).json({user: {_id: user._id, image: user.image, bio: user.bio}, token});
     }catch(error){
         res.status(400).json({message: 'Something went wrong!!'});
@@ -61,7 +61,7 @@ export const signUp = async(req, res) => {
                 password: hashPassword
             });
         }
-        const token = jwt.sign({email: newUser.email, _id: newUser._id}, 'test', {expiresIn: '1hr'});
+        const token = jwt.sign({email: newUser.email, _id: newUser._id}, process.env.JWT_SECRET, {expiresIn: '1hr'});
         res.status(200).json({user: {_id: newUser._id, image: newUser.image, bio: newUser.bio}, token});
     }catch(error){
         res.status(400).json({message: error.message});
