@@ -1,0 +1,64 @@
+.userPost {
+  height: 250px;
+  width: 100%;
+  display: flex;
+  position: relative;
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+}
+.postImage {
+  height: 100%;
+  width: 100%;
+}
+.postImage img {
+  height: 100%;
+  width: 100%;
+}
+@media (550px <= width <= 700px) {
+  .userPost {
+    height: 200px;
+  }
+}
+@media (450px <= width < 550px) {
+  .userPost {
+    height: 165px;
+  }
+}
+@media (width < 450px) {
+  .userPost {
+    height: 135px;
+  }
+}
+.postElements {
+  position: absolute;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.postElement {
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  margin: 0 15px;
+  font-weight: 500;
+}
+.postElement img {
+  height: 20px;
+  width: auto;
+  color: white;
+  margin-right: 5px;
+}
+@media (width < 550px) {
+  .postElement {
+    font-size: 0.9rem;
+    margin: 0 8px;
+  }
+  .postElement img {
+    height: 14px;
+  }
+}

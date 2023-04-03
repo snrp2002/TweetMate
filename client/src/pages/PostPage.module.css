@@ -1,0 +1,25 @@
+.singlePost {
+  width: 60%;
+  display: flex;
+  overflow-y: scroll;
+  flex-direction: column;
+  margin: 0 auto;
+  align-items: center;
+}
+.singlePost::-webkit-scrollbar {
+  display: none;
+}
+@media only screen and (max-width: 850px) {
+  .singlePost {
+    height: auto;
+    width: 100%;
+    overflow: visible;
+  }
+}
+@media only screen and (max-width: 850px) {
+  .singlePost {
+    height: auto;
+    width: 100%;
+    overflow: visible;
+  }
+}

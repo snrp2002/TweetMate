@@ -1,0 +1,32 @@
+.inputDiv {
+  width: auto;
+  align-items: center;
+  color: white;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  padding: 5px;
+}
+.inputDiv label {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+}
+.inputDiv input[type="file"] {
+  display: none;
+}
+.inputDiv img {
+  height: 25px;
+  margin-right: 5px;
+}
+.preview {
+  width: 100%;
+  background-color: black;
+  display: flex;
+  justify-content: center;
+}
+.preview img {
+  width: auto;
+  max-height: 350px;
+  overflow: hidden;
+}
