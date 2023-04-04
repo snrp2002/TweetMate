@@ -1,5 +1,5 @@
 # TweetMate
-TweetMate is a small social media application built with React and Node. It is designed to allow users to post and share tweets with their followers, as well as follow other users and view their tweets.
+TweetMate is a small social media application built with React and Node. It is designed to allow users to post and share tweets with other users, as well as to view others' posts, profile etc.
 
 ## Table of Contents
 1. Installation
