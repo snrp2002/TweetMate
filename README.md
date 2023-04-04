@@ -2,17 +2,17 @@
 TweetMate is a small social media application built with React and Node. It is designed to allow users to post and share tweets with their followers, as well as follow other users and view their tweets.
 
 ## Table of Contents
-A. Installation
-B. Usage
-C. Features
-D. Technologies Used
+1. Installation
+2. Usage
+3. Features
+4. Technologies Used
 
 ## Installation
 To install TweetMate, clone this repository to your local machine using the following command:
-### git clone https://github.com/yourusername/tweetmate.git
+#### git clone https://github.com/yourusername/tweetmate.git
 
 Once cloned, navigate to the client and server directories and run the following command in each to install the required dependencies:
-### npm install
+#### npm install
 
 Create a .env file in the server directory with following constants:
 1. DATABASE_URL (MongoDB)
@@ -24,7 +24,7 @@ Create a .env file in the server directory with following constants:
 
 ## Usage
 To use TweetMate, run the following command in the client and server directories to start the development servers:
-### npm start
+#### npm start
 
 This will start the React development server at http://localhost:3000 and the Node development server at http://localhost:5000.
 
