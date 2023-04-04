@@ -26,6 +26,7 @@ const AuthForm = (props) => {
 
   const switchHandler = () => {
     setSignUp((value) => !value);
+    setFormData(InitialData);
   };
 
   const onChangeHandler = (event) => {
