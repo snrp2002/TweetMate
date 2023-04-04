@@ -8,7 +8,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import googleImage from "../../images/google.png";
 import { signInAction, signUpAction } from "../../actions/auth";
 import axios from "axios";
-
+import {Notification} from "../UI/Popups";
 
 const InitialData = {
   firstName: "",
@@ -36,6 +36,23 @@ const AuthForm = (props) => {
 
   const formSubmissionHandler = (event) => {
     event.preventDefault();
+    for(const key in formData){
+      if(signUp && formData[key].trim() ===  ""){
+        Notification.fire({
+          icon: 'error',
+          text: `Enter valid ${key}!!`
+        })
+        return;
+      }
+      formData[key] = formData[key].trim();
+    }
+    if(signUp && formData.password !== formData.confirmPassword){
+      Notification.fire({
+        icon: 'error',
+        text: 'Passwords do not match!!'
+      })
+      return;
+    }
     props.setLoader(true);
     if (signUp) dispatch(signUpAction(formData, navigate));
     else dispatch(signInAction(formData, navigate));

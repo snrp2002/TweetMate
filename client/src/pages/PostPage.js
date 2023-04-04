@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import Post from "../components/posts/Post";
 import Container from "../components/UI/Container";
 import classes from './PostPage.module.css';
+import Loader from "../components/UI/Loader";
 const PostPage = () => {
     const {postId} = useParams();
     const posts = useSelector(state => state.posts);
@@ -22,7 +23,7 @@ const PostPage = () => {
     return (
         <Container >
             <div className={classes.singlePost}>
-                {post && <Post post={post}/>}
+                {post ? <Post post={post}/> : <Loader/>}
             </div>
         </Container>
     )
