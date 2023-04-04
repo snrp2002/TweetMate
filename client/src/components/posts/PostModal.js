@@ -38,8 +38,8 @@ const PostModal = (props) => {
       icon: 'question',
       title: '<h5 style="margin: 0;">Are you sure you want to edit this post?</h5>'
     }).then((result) => {
-        editRef.current.click();
-        if (result.isConfirmed) {     
+        if (result.isConfirmed) {
+          editRef.current.click();     
           dispatch({ type: EDIT, payload: { ...props.post } });
         }
     });
