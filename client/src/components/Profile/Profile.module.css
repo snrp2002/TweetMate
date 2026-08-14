@@ -1,15 +1,25 @@
 .profile {
-  width: 700px;
-  background-color: #242526;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px black;
-  margin: 10px auto;
+  padding: 40px 0 30px;
 }
-.profile::-webkit-scrollbar {
-  display: none;
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 90px 24px;
 }
-@media only screen and (max-width: 750px) {
-  .profile {
-    width: 95%;
-  }
+
+.errorTitle {
+  margin: 0 0 10px;
+  font-family: "Instrument Serif", serif;
+  font-size: 34px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.errorText {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--text-2);
 }

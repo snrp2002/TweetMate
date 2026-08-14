@@ -1,8 +1,62 @@
 .modal {
-  left: 50%;
-  transform: translate(-50%, 0);
-  width: 300px;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
 }
-.overlay {
-  background-color: rgba(0, 0, 0, 0.75);
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px 16px;
+  background: var(--surface-3);
+  border-bottom: 1px solid var(--line);
+}
+
+.title {
+  margin: 0;
+  font-family: "Instrument Serif", serif;
+  font-size: 25px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--text-3);
+  transition: color 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+
+.close:hover {
+  color: var(--text);
+  background: var(--surface-hi);
+}
+
+.form {
+  padding: 20px 22px 22px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.modal::-webkit-scrollbar {
+  width: 8px;
+}
+.modal::-webkit-scrollbar-thumb {
+  background: #2c2f35;
+  border-radius: 999px;
 }

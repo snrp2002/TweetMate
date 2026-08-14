@@ -1,20 +1,139 @@
+/* SweetAlert2 renders outside the React tree, so :global is needed for its
+   internal element classes. */
+
+/* ---------------------------------------------------------------- Toasts */
+
+.toast {
+  border-radius: 14px !important;
+  border: 1px solid var(--line-hi) !important;
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.95) !important;
+  padding: 4px 6px !important;
+  min-width: 240px;
+}
+
+.toast :global(.swal2-icon) {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  margin: 0 0 0 10px !important;
+  border: none !important;
+  border-radius: 50% !important;
+  font-size: 13px !important;
+  font-weight: 700;
+}
+
+.toast :global(.swal2-icon .swal2-icon-content) {
+  font-size: 13px !important;
+  line-height: 24px;
+}
+
+.iconOk {
+  background: var(--accent) !important;
+  color: var(--accent-ink) !important;
+}
+
+.iconBad {
+  background: var(--danger) !important;
+  color: #14100f !important;
+}
+
+.iconWarn {
+  background: #d9a441 !important;
+  color: #14100f !important;
+}
+
+.toastTitle {
+  padding: 13px 16px !important;
+  margin: 0 !important;
+  font-family: "Instrument Sans", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+  line-height: 1.45;
+  color: var(--text) !important;
+}
+
+.toastBar {
+  background: var(--accent) !important;
+  height: 2px !important;
+}
+
+.toastIn {
+  animation: toast-in 0.3s cubic-bezier(0.22, 0.68, 0.24, 1) both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------- Confirm */
+
 .confirm {
-  border: 2px solid black;
-  border-radius: 12px;
+  border-radius: 18px !important;
+  border: 1px solid var(--line-hi) !important;
+  box-shadow: 0 44px 100px -30px rgba(0, 0, 0, 0.95) !important;
+  padding: 30px 28px 24px !important;
 }
-.confirmTitle {
-  padding: 0 18px;
-}
-.confirmActions {
-  flex-wrap: nowrap;
-}
+
 .confirmIcon {
-  margin: 20px auto 20px;
+  display: none !important;
 }
-.notification {
-  border: 2px solid black;
+
+.confirmTitle {
+  padding: 0 0 22px !important;
+  font-family: "Instrument Sans", sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 500 !important;
+  line-height: 1.5;
+  color: var(--text) !important;
 }
-.notificationTimerProgressBar {
-  background-color: white;
-  height: 1px;
+
+.confirmActions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin: 0 !important;
+}
+
+.confirmButton,
+.denyButton {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 11px;
+  font-family: "Instrument Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.2s ease, transform 0.18s ease, border-color 0.2s ease;
+}
+
+.confirmButton {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 8px 26px -10px var(--accent-glow);
+}
+
+.confirmButton:hover {
+  background: var(--accent-hi);
+  transform: translateY(-1px);
+}
+
+.denyButton {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.denyButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--line-hi);
 }

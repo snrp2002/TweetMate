@@ -1,11 +1,14 @@
 import classes from './Loader.module.css';
-import loaderImage from '../../images/loader.gif';
 
-export default function Loader({ label = 'Loading...' }: { label?: string }) {
+export default function Loader({ label = 'Loading' }: { label?: string }) {
   return (
-    <div className={classes.loader}>
-      <img src={loaderImage} alt="" />
-      <p>{label}</p>
+    <div className={classes.loader} role="status" aria-live="polite">
+      <div className={classes.dots} aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <p className={classes.label}>{label}</p>
     </div>
   );
 }

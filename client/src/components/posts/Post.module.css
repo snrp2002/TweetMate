@@ -1,118 +1,229 @@
-.post {
-  background-color: #242526;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px black;
-  width: 80%;
-  justify-content: center;
-  margin: 10px 0;
-}
-@media only screen and (max-width: 850px) {
-  .post {
-    width: 70%;
-  }
-}
-@media only screen and (max-width: 550px) {
-  .post {
-    width: 95%;
-  }
+.card {
+  background: linear-gradient(var(--surface), var(--surface-2));
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  overflow: hidden;
+  margin-bottom: 22px;
+  animation: fade-up 0.5s var(--ease) both;
+  animation-delay: calc(var(--order, 0) * 60ms);
+  transition: border-color 0.3s var(--ease), box-shadow 0.35s var(--ease),
+    transform 0.35s var(--ease);
 }
 
-.header {
-  padding: 15px 20px;
-  padding-bottom: 10px;
-  display: flex;
-  color: white;
-  justify-content: space-between;
+.card:hover {
+  border-color: var(--line-hi);
+  transform: translateY(-2px);
+  box-shadow: 0 30px 70px -34px rgba(0, 0, 0, 0.95);
 }
-.profile {
-  display: flex;
-}
-.profileImage img {
-  cursor: pointer;
-  height: 35px;
-  width: 35px;
-  margin-right: 10px;
-  border-radius: 50%;
-}
-.headerInfo {
-  flex-direction: column;
-}
-.creator {
-  font-size: 1rem;
-  margin-bottom: 5px;
-  cursor: pointer;
-}
-.time {
-  font-size: 0.6rem;
-  display: flex;
-}
-.more {
-  align-self: center;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 25px;
+
+/* --- Head ---------------------------------------------------------------- */
+
+.head {
   display: flex;
   align-items: center;
+  gap: 12px;
+  padding: 15px 18px;
 }
-.more:hover {
-  background-color: #4e4f50;
-}
-.poster {
-  width: 100%;
-  height: 400px;
-  background-color: black;
+
+.who {
   display: flex;
-  justify-content: space-around;
+  flex-direction: column;
+  min-width: 0;
 }
-@media only screen and (max-width: 450px) {
-  .poster {
-    height: auto;
-  }
+
+.name {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
+  transition: color 0.2s var(--ease);
 }
-.tags {
-  color: white;
-  padding-left: 15px;
-  padding-bottom: 10px;
-  font-size: 0.8rem;
+
+.name:hover {
+  color: var(--accent);
 }
-.poster img {
-  width: auto;
-  max-height: 100%;
-  overflow: hidden;
+
+.when {
+  font-size: 12.5px;
+  color: var(--text-3);
 }
-.content {
-  padding: 10px 20px 5px;
-  color: white;
-}
-.message {
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 15px;
-}
-.message p {
-  margin: 5px 0;
-}
-.action {
-  border-top: 1px solid rgba(255, 255, 255, 0.253);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.253);
-  display: flex;
-  justify-content: space-evenly;
-  padding: 2px 0;
-}
-.actionButton {
-  cursor: pointer;
-  width: 50%;
-  padding: 7px 0;
-  text-align: center;
-  border-radius: 5px;
+
+.more {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  border-radius: 50%;
+  color: var(--text-3);
+  transition: color 0.2s var(--ease), background-color 0.2s var(--ease);
 }
-.actionButton img {
-  height: 20px;
-  margin-right: 5px;
+
+.more:hover {
+  color: var(--text);
+  background: var(--surface-hi);
 }
-.actionButton:hover {
-  background-color: #4e4f50;
+
+/* --- Media --------------------------------------------------------------- */
+
+.media {
+  position: relative;
+  margin: 0 12px;
+  border-radius: var(--r-media);
+  overflow: hidden;
+  background: #000;
+}
+
+.media img {
+  width: 100%;
+  max-height: 560px;
+  object-fit: cover;
+  transition: transform 0.7s var(--ease-soft);
+}
+
+.card:hover .media img {
+  transform: scale(1.014);
+}
+
+/* Inset vignette, so the photo sits into the surface rather than on it. */
+.media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: var(--r-media);
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* --- Caption ------------------------------------------------------------- */
+
+.caption {
+  padding: 17px 18px 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #ddd9d2;
+}
+
+.caption p {
+  margin: 0 0 0.42em;
+}
+
+.caption p:last-child {
+  margin-bottom: 0;
+}
+
+/* --- Tags ---------------------------------------------------------------- */
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 13px 18px 0;
+}
+
+.tag {
+  padding: 4px 11px;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  color: #c19a68;
+  font-size: 12.5px;
+  transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.tag:hover {
+  background: rgba(224, 164, 88, 0.2);
+  color: var(--accent-hi);
+}
+
+/* --- Actions ------------------------------------------------------------- */
+
+.actions {
+  display: flex;
+  gap: 8px;
+  padding: 16px 18px;
+  margin-top: 15px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.action {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 15px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line-soft);
+  font-family: "Instrument Sans", sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: color 0.2s var(--ease), background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease);
+}
+
+.action:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--line-hi);
+}
+
+.actionOn {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--line-hi);
+}
+
+.shareWord {
+  font-family: "Instrument Sans", sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+/* --- Like ---------------------------------------------------------------- */
+
+.liked {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+
+.liked:hover {
+  color: var(--accent-hi);
+  background: rgba(224, 164, 88, 0.18);
+}
+
+.icon {
+  position: relative;
+  display: inline-flex;
+}
+
+.pulse {
+  animation: heart-pop 0.6s var(--ease) both;
+}
+
+.ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  pointer-events: none;
+  animation: ring-out 0.6s var(--ease) both;
+}
+
+@media (max-width: 520px) {
+  .caption {
+    font-size: 15px;
+  }
+  .shareWord {
+    display: none;
+  }
 }

@@ -21,12 +21,12 @@ const EMPTY_FORM = {
 
 type FormData = typeof EMPTY_FORM;
 
-const SIGN_UP_LABELS: Record<keyof FormData, string> = {
+const LABELS: Record<keyof FormData, string> = {
   firstName: 'first name',
   lastName: 'last name',
   email: 'email',
   password: 'password',
-  confirmPassword: 'confirm password',
+  confirmPassword: 'password confirmation',
 };
 
 export default function AuthForm() {
@@ -37,8 +37,9 @@ export default function AuthForm() {
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [busy, setBusy] = useState(false);
 
-  const toggleMode = () => {
-    setIsSignUp((value) => !value);
+  const setMode = (next: boolean) => {
+    if (next === isSignUp) return;
+    setIsSignUp(next);
     setFormData(EMPTY_FORM);
   };
 
@@ -66,12 +67,12 @@ export default function AuthForm() {
     if (isSignUp) {
       for (const key of Object.keys(trimmed) as (keyof FormData)[]) {
         if (trimmed[key].trim() === '') {
-          notifyError(`Enter valid ${SIGN_UP_LABELS[key]}!!`);
+          notifyError(`Enter your ${LABELS[key]}`);
           return;
         }
       }
       if (trimmed.password !== trimmed.confirmPassword) {
-        notifyError('Passwords do not match!!');
+        notifyError('Those passwords do not match');
         return;
       }
     }
@@ -80,10 +81,10 @@ export default function AuthForm() {
     try {
       if (isSignUp) {
         await signUp(trimmed);
-        finish('Signed up successfully!');
+        finish('Welcome to TweetMate');
       } else {
         await signIn({ email: trimmed.email, password: trimmed.password });
-        finish('Signed in successfully!');
+        finish('Welcome back');
       }
       setFormData(EMPTY_FORM);
     } catch (error) {
@@ -96,130 +97,129 @@ export default function AuthForm() {
   const googleAuthenticate = async (input: GoogleAuthInput) => {
     if (isSignUp) {
       await signUp(input);
-      finish('Signed up successfully!');
+      finish('Welcome to TweetMate');
     } else {
       await signIn(input);
-      finish('Signed in successfully!');
+      finish('Welcome back');
     }
   };
 
-  if (busy) return <Loader />;
+  if (busy) return <Loader label={isSignUp ? 'Creating your account' : 'Signing you in'} />;
 
   return (
-    <div className={classes.authForm}>
+    <div>
+      <div className={classes.tabs} role="tablist" aria-label="Authentication mode">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!isSignUp}
+          className={`${classes.tab} ${!isSignUp ? classes.tabOn : ''}`}
+          onClick={() => setMode(false)}
+        >
+          Sign in
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isSignUp}
+          className={`${classes.tab} ${isSignUp ? classes.tabOn : ''}`}
+          onClick={() => setMode(true)}
+        >
+          Create account
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit}>
         {isSignUp && (
-          <>
-            <div>
-              <Input>
-                <label htmlFor="firstName">First Name*</label>
-                <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  autoComplete="given-name"
-                  required
-                />
-              </Input>
-              <Input>
-                <label htmlFor="lastName">Last Name*</label>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  autoComplete="family-name"
-                  required
-                />
-              </Input>
-            </div>
+          <div className={classes.pair}>
             <Input>
-              <label htmlFor="email">Email Id*</label>
+              <label htmlFor="firstName">First name</label>
               <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
+                type="text"
+                id="firstName"
+                name="firstName"
+                value={formData.firstName}
                 onChange={handleChange}
-                autoComplete="email"
+                autoComplete="given-name"
                 required
               />
             </Input>
             <Input>
-              <label htmlFor="password">Password*</label>
+              <label htmlFor="lastName">Last name</label>
               <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
+                type="text"
+                id="lastName"
+                name="lastName"
+                value={formData.lastName}
                 onChange={handleChange}
-                autoComplete="new-password"
+                autoComplete="family-name"
                 required
               />
             </Input>
-            <Input>
-              <label htmlFor="confirmPassword">Confirm Password*</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                autoComplete="new-password"
-                required
-              />
-            </Input>
-          </>
+          </div>
         )}
 
-        {!isSignUp && (
-          <>
-            <Input>
-              <label htmlFor="email">Email Id*</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                autoComplete="email"
-                required
-              />
-            </Input>
-            <Input>
-              <label htmlFor="password">Password*</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                autoComplete="current-password"
-                required
-              />
-            </Input>
-          </>
+        <Input>
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            autoComplete="email"
+            placeholder="you@example.com"
+            required
+          />
+        </Input>
+
+        <Input>
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            autoComplete={isSignUp ? 'new-password' : 'current-password'}
+            placeholder="••••••••"
+            required
+          />
+        </Input>
+
+        {isSignUp && (
+          <Input>
+            <label htmlFor="confirmPassword">Confirm password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              autoComplete="new-password"
+              placeholder="••••••••"
+              required
+            />
+          </Input>
         )}
 
-        <div className={classes.action}>
-          <Button type="submit">{isSignUp ? 'Sign Up' : 'Sign In'}</Button>
+        <div className={classes.submit}>
+          <Button type="submit">{isSignUp ? 'Create account' : 'Sign in'}</Button>
         </div>
-        <div className={classes.google}>
-          {config.googleClientId ? (
+
+        {config.googleClientId ? (
+          <>
+            <div className={classes.divider}>
+              <span>or</span>
+            </div>
             <GoogleSignInButton
-              label={isSignUp ? 'Sign Up with Google' : 'Sign In with Google'}
+              label={isSignUp ? 'Sign up with Google' : 'Continue with Google'}
               onAuthenticate={googleAuthenticate}
               onBusyChange={setBusy}
               onError={notifyError}
             />
-          ) : null}
-        </div>
-        <div className={classes.switch} onClick={toggleMode}>
-          {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-        </div>
+          </>
+        ) : null}
       </form>
     </div>
   );

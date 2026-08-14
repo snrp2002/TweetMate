@@ -1,72 +1,89 @@
-.user {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  padding: 20px;
+.header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 36px;
   align-items: center;
+  padding-bottom: 34px;
+  border-bottom: 1px solid var(--line);
+  animation: fade-up 0.5s var(--ease) both;
 }
-.userPhoto {
-  margin-right: 6vw;
-  overflow: hidden;
+
+.details {
+  min-width: 0;
+}
+
+.name {
+  margin: 0 0 10px;
+  font-family: "Instrument Serif", serif;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.bio {
+  max-width: 56ch;
+  margin-bottom: 20px;
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+.bio p {
+  margin: 0 0 0.35em;
+}
+
+.noBio {
+  margin: 0 0 20px;
+  font-size: 15.5px;
+  font-style: italic;
+  color: var(--text-3);
+}
+
+.row {
   display: flex;
   align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
-.userPhoto img {
-  border-radius: 50%;
-  border: 2px solid black;
-  height: 140px;
-  width: 140px;
+
+.stat {
+  font-size: 14px;
+  color: var(--text-2);
 }
-.userInfo {
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
+
+.stat b {
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
-.userName {
-  font-size: 1.4rem;
-  display: flex;
-  line-height: 1rem;
-  margin-bottom: 10px;
-  align-items: center;
-  font-weight: 500;
-}
-.userPosts {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-.userBio {
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-.userBio p {
-  margin: 5px 0;
-}
+
 .edit {
-  margin: 0 5px;
-  border-radius: 50%;
-  padding: 6px 5px 7px 8px;
-  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  transition: color 0.2s var(--ease), background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease);
 }
+
 .edit:hover {
-  background-color: #4e4f50;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--line-hi);
 }
-@media only screen and (max-width: 500px) {
-  .userPhoto img {
-    height: 90px;
-    width: 90px;
-  }
-  .userName {
-    font-size: 1.1rem;
-  }
-  .userName img {
-    height: 15px;
-  }
-  .userPosts {
-    font-size: 0.9rem;
-  }
-  .userBio {
-    font-size: 0.8rem;
+
+@media (max-width: 700px) {
+  .header {
+    grid-template-columns: 1fr;
+    gap: 22px;
   }
 }
