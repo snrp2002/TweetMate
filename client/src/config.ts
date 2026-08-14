@@ -22,8 +22,20 @@ function trimTrailingSlash(value: string): string {
 const DEFAULT_GOOGLE_CLIENT_ID =
   '895748341443-s8kp5gak0283dm129har14cgel95hdn2.apps.googleusercontent.com';
 
+/**
+ * Where the API lives when `VITE_API_URL` is not set.
+ *
+ * A bare `localhost` default would be a deployment footgun: a production build
+ * made without the env var would silently ship a bundle pointing at the
+ * developer's own machine. So dev falls back to localhost, and production falls
+ * back to the deployed API — which is what the original hardcoded URL did.
+ */
+const DEFAULT_API_URL = import.meta.env.DEV
+  ? 'http://localhost:5000'
+  : 'https://tweetmate.onrender.com';
+
 export const config = {
-  apiUrl: trimTrailingSlash(import.meta.env.VITE_API_URL ?? 'http://localhost:5000'),
+  apiUrl: trimTrailingSlash(import.meta.env.VITE_API_URL ?? DEFAULT_API_URL),
   googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID ?? DEFAULT_GOOGLE_CLIENT_ID,
   /** Origin used to build shareable post links; defaults to wherever the app is served from. */
   shareBaseUrl: trimTrailingSlash(
