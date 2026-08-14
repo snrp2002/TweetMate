@@ -63,9 +63,8 @@ export interface EmailSignInInput {
 
 export interface GoogleAuthInput {
   google: true;
-  email: string;
-  name: string;
-  image?: string;
+  /** The server verifies this with Google and derives the identity itself. */
+  accessToken: string;
 }
 
 export interface PostInput {

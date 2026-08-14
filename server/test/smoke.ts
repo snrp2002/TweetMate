@@ -120,19 +120,86 @@ const signin = await call('POST', '/auth/signin', {
 });
 check('signin succeeds', signin.status === 200 && !!signin.body.token, signin.body);
 
-const google = await call('POST', '/auth/signup', {
-  body: { google: true, name: 'Grace Hopper', email: 'grace@example.com', image: 'https://img/g.png' },
+// A second account, used later for the ownership checks. Google sign-up now
+// requires a Google-verified token, so this one is created with a password.
+const grace = await call('POST', '/auth/signup', {
+  body: {
+    firstName: 'Grace',
+    lastName: 'Hopper',
+    email: 'grace@example.com',
+    password: 'pw123456',
+    confirmPassword: 'pw123456',
+  },
 });
-check('google signup succeeds', google.status === 200 && !!google.body.token, google.body);
-const graceToken: string = google.body.token;
+check('second account created', grace.status === 200 && !!grace.body.token, grace.body);
+const graceToken: string = grace.body.token;
 
-const googlePwLogin = await call('POST', '/auth/signin', {
-  body: { email: 'grace@example.com', password: 'anything' },
+console.log('\n--- google identity cannot be self-asserted');
+
+// The original code trusted `{ google: true, email }` outright, so knowing an
+// address was enough to obtain a session for it. Each of these must fail.
+const claimEmail = await call('POST', '/auth/signin', {
+  body: { google: true, email: 'ada@example.com' },
 });
 check(
-  'password login on google account rejected',
-  googlePwLogin.status === 400 && /google/i.test(googlePwLogin.body.message),
-  googlePwLogin.body,
+  'signin with google:true + email only is rejected',
+  claimEmail.status >= 400 && !claimEmail.body.token,
+  claimEmail.body,
+);
+
+const claimEmailWithImage = await call('POST', '/auth/signin', {
+  body: { google: true, email: 'ada@example.com', image: 'https://img/x.png' },
+});
+check(
+  'signin with google:true + email + image is rejected',
+  claimEmailWithImage.status >= 400 && !claimEmailWithImage.body.token,
+  claimEmailWithImage.body,
+);
+
+const forgedToken = await call('POST', '/auth/signin', {
+  body: { google: true, accessToken: 'not-a-real-google-token' },
+});
+check(
+  'signin with a forged google token is rejected',
+  forgedToken.status >= 400 && !forgedToken.body.token,
+  forgedToken.body,
+);
+
+const claimSignUp = await call('POST', '/auth/signup', {
+  body: { google: true, email: 'brand-new@example.com', name: 'Nobody' },
+});
+check(
+  'signup with google:true + email only is rejected',
+  claimSignUp.status >= 400 && !claimSignUp.body.token,
+  claimSignUp.body,
+);
+
+const forgedSignUp = await call('POST', '/auth/signup', {
+  body: { google: true, accessToken: 'not-a-real-google-token' },
+});
+check(
+  'signup with a forged google token is rejected',
+  forgedSignUp.status >= 400 && !forgedSignUp.body.token,
+  forgedSignUp.body,
+);
+
+// The rejected sign-up must not have created anything.
+const ghost = await call('POST', '/auth/signin', {
+  body: { email: 'brand-new@example.com', password: 'x' },
+});
+check('rejected google signup created no account', ghost.status === 404, ghost.body);
+
+// A Google-created account has no password. Seed one directly, since it can no
+// longer be produced through the API without a real Google token.
+const { User } = await import('../src/models/user.js');
+await User.create({ name: 'Alan Turing', email: 'alan@example.com', bio: '----' });
+const passwordless = await call('POST', '/auth/signin', {
+  body: { email: 'alan@example.com', password: 'anything' },
+});
+check(
+  'password login on a google-only account is rejected',
+  passwordless.status === 400 && /google/i.test(passwordless.body.message),
+  passwordless.body,
 );
 
 console.log('\n--- posts auth');

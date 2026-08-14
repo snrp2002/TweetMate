@@ -14,6 +14,7 @@ Kept here because the shapes still explain why the code looks the way it does.
 | `deletePost` pruned the **caller's** `posts` array | Prunes the creator's |
 | `editPost` passed the whole body to `findByIdAndUpdate` | Whitelists `message`, `image`, `tags` only |
 | `getPosts` ran one `User.findOne` per post (N+1) | One batched `$in` query |
+| **Google sign-in trusted the browser**: `{ google: true, email }` was taken at face value, so knowing an address granted a session for that account | The access token is verified with Google server-side (`getTokenInfo`), the `aud` is checked against our client ID, and the identity comes from Google — never from the request body |
 | `tags` sent as a string, stored as `["react node"]`, rendered as one broken tag | Normalized server-side into a real array |
 | Auth failures returned `400` | `401`, with `403` for ownership violations |
 | Every thunk swallowed errors into `console.log` | `toErrorMessage()` + toasts; hooks expose `isError` |
@@ -48,12 +49,6 @@ grows.
 ### The JWT lives in `localStorage`
 Readable by any script on the origin. An httpOnly refresh-token cookie would be the stronger design.
 
-### Google trust is client-side
-`GoogleSignInButton` verifies `email_verified` in the browser and posts `{ google: true }`; the
-server never validates a Google token, so that flag alone bypasses the password check. Verifying the
-ID token server-side (via `google-auth-library`, which was previously an unused dependency) is the
-correct fix.
-
 ### No unique index on `email`
 Uniqueness is enforced only by a `findOne` check in `signUp`, so two concurrent registrations for the
 same address can both succeed. Deliberately not added, because creating the index would fail on an
@@ -81,7 +76,7 @@ infinite spinner — but the latency remains.
 
 1. **Move images to object storage** and return URLs. Everything else is downstream of this.
 2. **Paginate `GET /posts`** (cursor on `createdAt`).
-3. **Verify Google ID tokens server-side.**
-4. Replace the `posts`/`comments` string ids with real `ObjectId` refs and `.populate()`.
-5. Add a `unique` index on `email` as an explicit migration.
-6. Move the JWT to an httpOnly cookie with a refresh flow.
+3. Replace the `posts`/`comments` string ids with real `ObjectId` refs and `.populate()`.
+4. Add a `unique` index on `email` as an explicit migration.
+5. Move the JWT to an httpOnly cookie with a refresh flow.
+6. Add a linter (none ships now that `react-scripts` is gone) and client-side tests.

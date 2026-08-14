@@ -78,9 +78,8 @@ export interface EmailSignUpBody {
 
 export interface GoogleSignUpBody {
   google: true;
-  name: string;
-  email: string;
-  image?: string;
+  /** Verified server-side. Identity is never taken from the request body. */
+  accessToken: string;
 }
 
 export type SignUpBody = EmailSignUpBody | GoogleSignUpBody;
@@ -93,8 +92,8 @@ export interface EmailSignInBody {
 
 export interface GoogleSignInBody {
   google: true;
-  email: string;
-  image?: string;
+  /** Verified server-side. Identity is never taken from the request body. */
+  accessToken: string;
 }
 
 export type SignInBody = EmailSignInBody | GoogleSignInBody;
