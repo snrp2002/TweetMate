@@ -1,13 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import classes from './Navbar.module.css';
-import logoImage from '../../images/brandLogo.png';
-import homeImage from '../../images/home.png';
-import profileImage from '../../images/profile.png';
-import newPostImage from '../../images/newPost.png';
-import logoutImage from '../../images/logout.png';
 import { Modal, Overlay } from '../UI/Modal';
+import Icon from '../UI/Icon';
+import Avatar from '../UI/Avatar';
 import { notifySuccess } from '../UI/Popups';
 import { useAuth } from '../../auth/AuthContext';
 import { useScrollToHash } from '../UI/HashLink/useScrollToHash';
@@ -19,67 +16,66 @@ function portal(node: ReactNode, id: string) {
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isAuthenticated, signOut } = useAuth();
-  const [showModal, setShowModal] = useState(false);
-  const scrollToNewPost = useScrollToHash('/', 'newPost');
+  const [showMenu, setShowMenu] = useState(false);
+  const scrollToComposer = useScrollToHash('/', 'newPost');
 
   const handleSignOut = () => {
     signOut();
-    notifySuccess('Logged Out successfully!');
-    setShowModal(false);
+    notifySuccess('Signed out');
+    setShowMenu(false);
     void navigate('/');
   };
 
+  const onFeed = location.pathname === '/';
+
   return (
     <>
-      <div className={classes.navbar}>
-        <Link to="/" className={classes.brandName}>
-          <img src={logoImage} alt="" />
-          TweetMate
-        </Link>
-        <div className={classes.navOptions}>
-          <button
-            type="button"
-            className={classes.option}
-            onClick={scrollToNewPost}
-            aria-label="New post"
-          >
-            <img src={newPostImage} alt="" />
-          </button>
-          <Link to="/" className={classes.option} aria-label="Home">
-            <img src={homeImage} alt="" />
+      <header className={classes.bar}>
+        <div className={classes.inner}>
+          <Link to="/" className={classes.logo}>
+            Tweet<i>Mate</i>
           </Link>
-          {user ? (
-            <div className={classes.profile}>
-              <img
-                src={user.image || profileImage}
-                alt="Your profile"
-                onClick={() => setShowModal((value) => !value)}
-              />
-            </div>
-          ) : (
-            <Link to="/auth" className={classes.auth}>
-              Sign&nbsp;In
-            </Link>
-          )}
-        </div>
-      </div>
 
-      {showModal && isAuthenticated && user && (
-        <>
-          {portal(<Overlay onClose={() => setShowModal(false)} />, 'overlay-root')}
-          {portal(
-            <Modal className={classes.modal}>
-              <Link to={`/user/${user._id}`}>
-                <div className={classes.modalContent} onClick={() => setShowModal(false)}>
-                  <img src={profileImage} alt="" />
-                  Your Profile
-                </div>
-              </Link>
-              <div className={classes.modalContent} onClick={handleSignOut}>
-                <img src={logoutImage} alt="" />
-                Logout
+          <nav className={classes.nav}>
+            <Link to="/" className={`${classes.link} ${onFeed ? classes.linkOn : ''}`}>
+              Feed
+            </Link>
+            <button type="button" className={classes.link} onClick={scrollToComposer}>
+              Post
+            </button>
+
+            {user ? (
+              <div className={classes.account}>
+                <Avatar src={user.image} size={36} onClick={() => setShowMenu((v) => !v)} />
               </div>
+            ) : (
+              <Link to="/auth" className={classes.cta}>
+                Sign in
+              </Link>
+            )}
+          </nav>
+        </div>
+      </header>
+
+      {showMenu && isAuthenticated && user && (
+        <>
+          {portal(<Overlay onClose={() => setShowMenu(false)} bare />, 'overlay-root')}
+          {portal(
+            <Modal className={classes.menu ?? ''} anchored>
+              <Link
+                to={`/user/${user._id}`}
+                onClick={() => setShowMenu(false)}
+                className={classes.menuItem}
+              >
+                <Icon name="user" size={16} />
+                Profile
+              </Link>
+              <button type="button" className={classes.menuItem} onClick={handleSignOut}>
+                <Icon name="logout" size={16} />
+                Sign out
+              </button>
             </Modal>,
             'modal-root',
           )}

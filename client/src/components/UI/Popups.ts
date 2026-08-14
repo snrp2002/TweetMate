@@ -3,31 +3,36 @@ import classes from './Popups.module.css';
 
 export const Confirm = Swal.mixin({
   showDenyButton: true,
-  confirmButtonText: 'Yes',
-  width: '300px',
-  background: '#3a3b3c',
-  color: '#fff',
+  confirmButtonText: 'Confirm',
+  denyButtonText: 'Cancel',
+  width: '380px',
+  background: '#16171b',
+  color: '#edeae4',
+  buttonsStyling: false,
   customClass: {
     popup: classes.confirm ?? '',
     title: classes.confirmTitle ?? '',
     actions: classes.confirmActions ?? '',
+    confirmButton: classes.confirmButton ?? '',
+    denyButton: classes.denyButton ?? '',
     icon: classes.confirmIcon ?? '',
   },
 });
 
 export const Notification = Swal.mixin({
   toast: true,
-  position: 'top-end',
+  position: 'bottom-end',
   showConfirmButton: false,
-  timer: 3000,
+  timer: 3200,
   timerProgressBar: true,
-  width: 'fit-content',
-  padding: '10px',
-  background: '#3a3b3c',
-  color: 'white',
+  width: 'auto',
+  background: '#16171b',
+  color: '#edeae4',
+  showClass: { popup: classes.toastIn ?? '' },
   customClass: {
-    popup: classes.notification ?? '',
-    timerProgressBar: classes.notificationTimerProgressBar ?? '',
+    popup: classes.toast ?? '',
+    title: classes.toastTitle ?? '',
+    timerProgressBar: classes.toastBar ?? '',
   },
   didOpen: (toast) => {
     toast.addEventListener('mouseenter', Swal.stopTimer);
@@ -36,21 +41,18 @@ export const Notification = Swal.mixin({
 });
 
 export function notifySuccess(text: string): void {
-  void Notification.fire({ icon: 'success', text });
+  void Notification.fire({ title: text, iconHtml: '✓', customClass: { icon: classes.iconOk ?? '' } });
 }
 
 export function notifyError(text: string): void {
-  void Notification.fire({ icon: 'error', text });
+  void Notification.fire({ title: text, iconHtml: '!', customClass: { icon: classes.iconBad ?? '' } });
 }
 
 export function notifyWarning(text: string): void {
-  void Notification.fire({ icon: 'warning', text });
+  void Notification.fire({ title: text, iconHtml: '!', customClass: { icon: classes.iconWarn ?? '' } });
 }
 
 export async function confirmAction(title: string): Promise<boolean> {
-  const result = await Confirm.fire({
-    icon: 'question',
-    title: `<h5 style="margin: 0;">${title}</h5>`,
-  });
+  const result = await Confirm.fire({ title });
   return result.isConfirmed;
 }

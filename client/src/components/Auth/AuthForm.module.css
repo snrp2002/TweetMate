@@ -1,44 +1,66 @@
-.authForm {
-  color: white;
-  width: 350px;
-  background-color: #242526;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px black;
-  padding: 10px 20px;
-  margin: 10px auto;
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 26px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
 }
-@media only screen and (max-width: 420px) {
-  .authForm {
-    width: 80%;
-  }
+
+.tab {
+  padding: 10px 12px;
+  border-radius: var(--r-pill);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  transition: background-color 0.22s var(--ease), color 0.22s var(--ease);
 }
-.action {
-  margin-bottom: 5px;
+
+.tab:hover {
+  color: var(--text);
 }
-.switch {
-  padding: 10px 0;
-  text-align: center;
-  margin: 10px 0;
-  color: white;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 0.9rem;
+
+.tabOn,
+.tabOn:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
-.switch:hover {
-  background-color: #4e4f50;
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
-.google button {
-  background-color: white;
-  color: black;
+
+.submit {
+  margin-top: 6px;
+}
+
+.divider {
   display: flex;
-  justify-content: center;
-  border: 1px solid white;
+  align-items: center;
+  gap: 14px;
+  margin: 20px 0;
 }
-.google button:hover {
-  border: 1px solid red;
-  box-shadow: 0px 1px 6px black;
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
 }
-.google img {
-  height: 20px;
-  margin-right: 10px;
+
+.divider span {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+@media (max-width: 460px) {
+  .pair {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
 }

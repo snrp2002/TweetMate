@@ -1,0 +1,95 @@
+.spread {
+  display: grid;
+  grid-template-columns: minmax(0, 660px) minmax(280px, 336px);
+  justify-content: center;
+  gap: clamp(26px, 4vw, 54px);
+  align-items: start;
+  padding: 34px 0 70px;
+}
+
+.feed {
+  min-width: 0;
+}
+
+/* --- Heading ------------------------------------------------------------- */
+
+.head {
+  margin-bottom: 26px;
+  animation: fade-up 0.45s var(--ease) both;
+}
+
+.title {
+  margin: 0 0 4px;
+  font-family: "Instrument Serif", serif;
+  font-size: clamp(2.1rem, 4vw, 2.9rem);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.title i {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.sub {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--text-2);
+}
+
+/* --- Failure ------------------------------------------------------------- */
+
+.failure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 62px 26px;
+  background: rgba(229, 100, 90, 0.04);
+  border: 1px solid rgba(229, 100, 90, 0.22);
+  border-radius: var(--r-card);
+}
+
+.failureTitle {
+  margin: 0 0 8px;
+  font-family: "Instrument Serif", serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.failureText {
+  margin: 0 0 22px;
+  max-width: 40ch;
+  font-size: 14.5px;
+  color: var(--text-2);
+}
+
+.retry {
+  padding: 10px 22px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: background-color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.retry:hover {
+  background: var(--accent-hi);
+  transform: translateY(-1px);
+}
+
+/* --- Responsive ---------------------------------------------------------- */
+
+@media (max-width: 980px) {
+  .spread {
+    grid-template-columns: minmax(0, 660px);
+    gap: 34px;
+  }
+  .feed {
+    order: 2;
+  }
+}

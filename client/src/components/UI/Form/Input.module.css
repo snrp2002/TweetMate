@@ -1,65 +1,61 @@
-input,
-textarea {
-  font-family: inherit;
-}
 .input {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   width: 100%;
 }
+
 .input label {
-  margin: 5px 10px;
   display: block;
-  font-size: 1rem;
+  margin-bottom: 7px;
+  font-size: 13px;
   font-weight: 500;
-  color: white;
+  color: var(--text-2);
 }
+
 .input input[type="text"],
-input[type="password"],
-input[type="email"] {
+.input input[type="password"],
+.input input[type="email"],
+.input textarea {
   display: block;
-  width: 90%;
-  border: none;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  padding: 10px 15px;
-  margin: auto;
-  background-color: #3a3b3c;
-  color: white;
-}
-.input input[type="text"]:focus,
-.input input[type="password"]:focus,
-.input input[type="email"]:focus {
-  border: none;
-  outline: none;
-  background-color: #4e4f50;
-}
-.input input[type="text"]:hover,
-.input input[type="password"]:hover,
-.input input[type="email"]:hover {
-  background-color: #4e4f50;
+  width: 100%;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 14.5px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--line);
+  border-radius: var(--r-field);
+  transition: border-color 0.2s var(--ease), background-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
 }
 
 .input textarea {
-  display: block;
-  border: none;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  padding: 10px 15px;
-  margin: auto;
-  background-color: #3a3b3c;
-  color: white;
-  resize: inherit;
-  width: 90%;
-  height: 150px;
+  min-height: 104px;
+  resize: vertical;
+  line-height: 1.5;
 }
-textarea::-webkit-scrollbar {
-  display: none;
+
+.input input::placeholder,
+.input textarea::placeholder {
+  color: var(--text-3);
 }
-.input textarea:focus {
-  border: none;
-  outline: none;
-  background-color: #4e4f50;
-}
+
+.input input:hover,
 .input textarea:hover {
-  background-color: #4e4f50;
+  border-color: var(--line-hi);
+}
+
+.input input:focus,
+.input textarea:focus {
+  outline: none;
+  border-color: var(--accent-line);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.input textarea::-webkit-scrollbar {
+  width: 6px;
+}
+.input textarea::-webkit-scrollbar-thumb {
+  background: #33363c;
+  border-radius: 999px;
 }

@@ -4,6 +4,7 @@ import classes from './EditProfile.module.css';
 import { Modal, Overlay } from '../../UI/Modal';
 import Image from '../../UI/Form/Image';
 import Input from '../../UI/Form/Input';
+import Icon from '../../UI/Icon';
 import { Button, ButtonAlt } from '../../UI/Form/Button';
 import { notifyError, notifySuccess } from '../../UI/Popups';
 import { useAuth } from '../../../auth/AuthContext';
@@ -27,7 +28,7 @@ export default function EditProfile({ showModal, onClose }: EditProfileProps) {
   const [bio, setBio] = useState(user?.bio ?? '');
   const [image, setImage] = useState(user?.image ?? '');
 
-  // Re-seed the form whenever it is reopened, so a cancelled edit is discarded.
+  // Re-seed whenever reopened, so a cancelled edit is discarded.
   useEffect(() => {
     if (showModal) {
       setBio(user?.bio ?? '');
@@ -41,7 +42,7 @@ export default function EditProfile({ showModal, onClose }: EditProfileProps) {
     event.preventDefault();
     try {
       await editProfile.mutateAsync({ bio, image });
-      notifySuccess('Profile Edited!');
+      notifySuccess('Profile updated');
       onClose();
     } catch (error) {
       notifyError(toErrorMessage(error));
@@ -50,28 +51,40 @@ export default function EditProfile({ showModal, onClose }: EditProfileProps) {
 
   return (
     <>
-      {portal(<Overlay onClose={onClose} className={classes.overlay ?? ''} />, 'overlay-root')}
+      {portal(<Overlay onClose={onClose} />, 'overlay-root')}
       {portal(
         <Modal className={classes.modal ?? ''}>
-          <form onSubmit={handleSubmit}>
+          <header className={classes.head}>
+            <h2 className={classes.title}>Edit profile</h2>
+            <button type="button" className={classes.close} onClick={onClose} aria-label="Close">
+              <Icon name="close" size={15} />
+            </button>
+          </header>
+
+          <form onSubmit={handleSubmit} className={classes.form}>
+            <Image value={image} onDone={setImage} label="Change photo" />
+
             <Input>
-              <label htmlFor="bio">Bio*</label>
+              <label htmlFor="bio">Bio</label>
               <textarea
                 id="bio"
                 name="bio"
                 value={bio}
                 onChange={(event) => setBio(event.target.value)}
                 required
-                style={{ height: '50px' }}
+                maxLength={280}
+                placeholder="A line or two about you"
               />
             </Input>
-            <Image value={image} onDone={setImage} label="Change Photo" />
-            <Button type="submit" disabled={editProfile.isPending}>
-              {editProfile.isPending ? 'Saving...' : 'Submit'}
-            </Button>
-            <ButtonAlt type="button" onClick={onClose}>
-              Cancel
-            </ButtonAlt>
+
+            <div className={classes.actions}>
+              <Button type="submit" disabled={editProfile.isPending}>
+                {editProfile.isPending ? 'Saving…' : 'Save'}
+              </Button>
+              <ButtonAlt type="button" onClick={onClose}>
+                Cancel
+              </ButtonAlt>
+            </div>
           </form>
         </Modal>,
         'modal-root',

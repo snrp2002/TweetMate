@@ -1,28 +1,22 @@
 import classes from './UserPosts.module.css';
 import UserPost from './UserPost';
-import postsImage from '../../images/posts.png';
 
 export default function UserPosts({ postIds }: { postIds: string[] }) {
   return (
-    <div className={classes.postsContainer}>
-      <div className={classes.options}>
-        <div className={classes.option}>
-          <img src={postsImage} alt="" />
-          Posts
-        </div>
-      </div>
+    <section className={classes.wrap}>
+      <h2 className={classes.title}>Photos</h2>
 
       {postIds.length === 0 ? (
-        <div className={classes.noPosts}>
-          <h2>No Posts Available.</h2>
+        <div className={classes.empty}>
+          <p>No photos yet.</p>
         </div>
       ) : (
-        <div className={classes.userPosts}>
-          {postIds.map((id) => (
-            <UserPost key={id} postId={id} />
+        <div className={classes.grid}>
+          {postIds.map((id, index) => (
+            <UserPost key={id} postId={id} order={Math.min(index, 9)} />
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }

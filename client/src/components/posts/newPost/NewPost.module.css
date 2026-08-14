@@ -1,62 +1,61 @@
-.newpost-container {
-  height: 91vh;
-  width: 40%;
-  overflow-y: scroll;
-  overflow-x: hidden;
-}
-.newpost-container::-webkit-scrollbar {
-  display: none;
-}
-@media only screen and (max-width: 850px) {
-  .newpost-container {
-    height: auto;
-    width: 100%;
-    overflow: visible;
-  }
+.rail {
+  position: sticky;
+  top: calc(var(--nav-h) + 26px);
+  align-self: start;
+  animation: fade-up 0.5s var(--ease) both;
 }
 
-.newpost {
-  color: white;
-  width: 70%;
-  background-color: #242526;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px black;
+.panel {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 22px 20px;
+}
+
+.title {
+  margin: 0 0 18px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* --- Signed-out gate ----------------------------------------------------- */
+
+.gate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.gateText {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.gateLink {
+  display: inline-flex;
   padding: 10px 20px;
-  margin: 10px auto;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px -10px var(--accent-glow);
+  transition: background-color 0.2s var(--ease), transform 0.2s var(--ease);
 }
-@media only screen and (max-width: 1100px) {
-  .newpost {
-    width: 80%;
+
+.gateLink:hover {
+  background: var(--accent-hi);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 980px) {
+  .rail {
+    position: static;
   }
-}
-@media only screen and (max-width: 850px) {
-  .newpost {
-    width: 65%;
-  }
-}
-@media only screen and (max-width: 550px) {
-  .newpost {
-    height: auto;
-    width: 80%;
-    overflow: visible;
-  }
-}
-.tweet {
-  display: block;
-  width: 100%;
-  height: 50px;
-  text-align: center;
-  background-color: #3a3b3c;
-  color: white;
-  font-size: 1.2rem;
-  margin: auto;
-  border: none;
-  border-radius: 25px;
-  font-family: inherit;
-  cursor: pointer;
-  font-weight: 500;
-}
-.tweet:hover {
-  background-color: #4e4f50;
-  box-shadow: 0px 1px 4px black;
 }

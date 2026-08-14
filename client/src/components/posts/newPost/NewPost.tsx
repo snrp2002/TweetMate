@@ -1,15 +1,29 @@
+import { Link } from 'react-router-dom';
 import classes from './NewPost.module.css';
 import PostForm from './PostForm';
 import { useAuth } from '../../../auth/AuthContext';
+import { usePostForm } from '../../../postForm/PostFormContext';
 
 export default function NewPost() {
   const { isAuthenticated } = useAuth();
+  const { mode } = usePostForm();
 
   return (
-    <div id="newPost" className={classes['newpost-container']}>
-      <div className={classes.newpost}>
-        {isAuthenticated ? <PostForm /> : <h3>Sign In to create a post...</h3>}
+    <aside id="newPost" className={classes.rail}>
+      <div className={classes.panel}>
+        <h2 className={classes.title}>{mode === 'edit' ? 'Edit post' : 'New post'}</h2>
+
+        {isAuthenticated ? (
+          <PostForm />
+        ) : (
+          <div className={classes.gate}>
+            <p className={classes.gateText}>Sign in to share a photo with the feed.</p>
+            <Link to="/auth" className={classes.gateLink}>
+              Sign in
+            </Link>
+          </div>
+        )}
       </div>
-    </div>
+    </aside>
   );
 }

@@ -1,4 +1,5 @@
 import { Link, isRouteErrorResponse, useRouteError } from 'react-router-dom';
+import classes from './ErrorPage.module.css';
 
 function describe(error: unknown): string {
   if (isRouteErrorResponse(error)) return `${error.status} — ${error.statusText}`;
@@ -8,15 +9,17 @@ function describe(error: unknown): string {
 }
 
 export default function ErrorPage() {
-  // The previous version rendered the raw error object, which React cannot
-  // render as a child — so the error boundary itself threw.
+  // Renders the message, never the raw Error object — React cannot render an
+  // Error as a child, which used to make the boundary itself throw.
   const error = useRouteError();
 
   return (
-    <div style={{ padding: '2rem', color: 'white', textAlign: 'center' }}>
-      <h1>Something went wrong</h1>
-      <p>{describe(error)}</p>
-      <Link to="/">Go to Home</Link>
+    <div className={classes.page}>
+      <h1 className={classes.title}>Something went wrong</h1>
+      <p className={classes.detail}>{describe(error)}</p>
+      <Link to="/" className={classes.home}>
+        Back to feed
+      </Link>
     </div>
   );
 }

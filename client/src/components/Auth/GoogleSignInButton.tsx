@@ -1,6 +1,6 @@
 import { useGoogleLogin } from '@react-oauth/google';
-import googleImage from '../../images/google.png';
-import { Button } from '../UI/Form/Button';
+import { ButtonAlt } from '../UI/Form/Button';
+import { GoogleMark } from '../UI/Icon';
 import { fetchGoogleProfile } from '../../api/auth';
 import { toErrorMessage } from '../../api/client';
 import type { GoogleAuthInput } from '../../types/api';
@@ -13,9 +13,9 @@ interface GoogleSignInButtonProps {
 }
 
 /**
- * Isolated so that `useGoogleLogin` only ever runs when a client ID is
- * configured — the Google script throws "Missing required parameter
- * client_id" on mount otherwise, which would take down the whole auth page.
+ * Isolated so `useGoogleLogin` only ever runs when a client ID is configured —
+ * Google's script throws "Missing required parameter client_id" on mount
+ * otherwise, which would take down the whole auth page.
  */
 export default function GoogleSignInButton({
   label,
@@ -48,9 +48,9 @@ export default function GoogleSignInButton({
   });
 
   return (
-    <Button type="button" onClick={() => login()}>
-      <img src={googleImage} alt="" />
+    <ButtonAlt type="button" onClick={() => login()}>
+      <GoogleMark size={15} />
       {label}
-    </Button>
+    </ButtonAlt>
   );
 }

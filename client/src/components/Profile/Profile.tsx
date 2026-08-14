@@ -10,8 +10,16 @@ export default function Profile() {
   const { userId = '' } = useParams();
   const { data: user, isPending, isError, error } = useUser(userId);
 
-  if (isPending) return <Loader />;
-  if (isError) return <p role="alert">{toErrorMessage(error)}</p>;
+  if (isPending) return <Loader label="Loading profile" />;
+
+  if (isError) {
+    return (
+      <div className={classes.error} role="alert">
+        <h2 className={classes.errorTitle}>Profile not found</h2>
+        <p className={classes.errorText}>{toErrorMessage(error)}</p>
+      </div>
+    );
+  }
 
   return (
     <div className={classes.profile}>

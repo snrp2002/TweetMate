@@ -1,8 +1,89 @@
-.auth {
-  height: 91vh;
-  width: 100%;
-  overflow-y: scroll;
+.spread {
+  display: grid;
+  grid-template-columns: 1.02fr 0.98fr;
+  gap: clamp(30px, 6vw, 80px);
+  align-items: center;
+  min-height: calc(100vh - var(--nav-h));
+  padding: 40px 0 60px;
+  animation: fade-up 0.5s var(--ease) both;
 }
-.auth::-webkit-scrollbar {
-  display: none;
+
+/* --- Pitch --------------------------------------------------------------- */
+
+.headline {
+  margin: 0 0 18px;
+  font-family: "Instrument Serif", serif;
+  font-size: clamp(2.4rem, 4.6vw, 3.9rem);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  max-width: 16ch;
+}
+
+.headline i {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.lede {
+  margin: 0 0 30px;
+  max-width: 42ch;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+.points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 44ch;
+}
+
+.points li {
+  position: relative;
+  padding: 11px 0 11px 26px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 14.5px;
+  color: var(--text-2);
+}
+
+.points li:last-child {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.points li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 20px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* --- Form panel ---------------------------------------------------------- */
+
+.panel {
+  background: linear-gradient(var(--surface), var(--surface-2));
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 34px 32px;
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.95);
+}
+
+@media (max-width: 900px) {
+  .spread {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding-top: 26px;
+  }
+  .points {
+    display: none;
+  }
+  .panel {
+    padding: 28px 24px;
+  }
 }

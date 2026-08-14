@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import classes from './Comment.module.css';
-import profileImage from '../../../images/profile.png';
+import Avatar from '../../UI/Avatar';
 import type { Comment as CommentType } from '../../../types/api';
 
 export default function Comment({ comment }: { comment: CommentType }) {
@@ -12,15 +12,18 @@ export default function Comment({ comment }: { comment: CommentType }) {
   const when = Number.isNaN(date.getTime()) ? '' : formatDistanceToNow(date, { addSuffix: true });
 
   return (
-    <div className={classes.commentContainer}>
-      <img src={comment.image || profileImage} alt="" onClick={goToProfile} />
-      <div className={classes.comment}>
-        <div className={classes.name} onClick={goToProfile}>
-          {comment.name}
-        </div>
-        <div className={classes.message}>{comment.comment}</div>
-        <div className={classes.time}>{when}</div>
+    <li className={classes.item}>
+      <Avatar src={comment.image} name={comment.name} size={30} onClick={goToProfile} />
+
+      <div className={classes.body}>
+        <p className={classes.meta}>
+          <button type="button" className={classes.name} onClick={goToProfile}>
+            {comment.name}
+          </button>
+          <span className={classes.when}>{when}</span>
+        </p>
+        <p className={classes.text}>{comment.comment}</p>
       </div>
-    </div>
+    </li>
   );
 }

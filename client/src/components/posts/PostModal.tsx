@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import classes from './PostModal.module.css';
 import { Modal, Overlay } from '../UI/Modal';
+import Icon from '../UI/Icon';
 import { confirmAction, notifyError, notifySuccess } from '../UI/Popups';
 import { useAuth } from '../../auth/AuthContext';
 import { usePostForm } from '../../postForm/PostFormContext';
@@ -28,17 +29,17 @@ export default function PostModal({ post, showModal, onClose }: PostModalProps) 
   const { user } = useAuth();
   const { startEditing } = usePostForm();
   const deleteMutation = useDeletePost();
-  const scrollToNewPost = useScrollToHash('/', 'newPost');
+  const scrollToComposer = useScrollToHash('/', 'newPost');
 
   const isOwner = user?._id === post.creator;
 
   const handleDelete = async () => {
     onClose();
-    if (!(await confirmAction('Are you sure you want to delete this post?'))) return;
+    if (!(await confirmAction('Delete this post? This cannot be undone.'))) return;
 
     try {
       await deleteMutation.mutateAsync(post._id);
-      notifySuccess('Successfully Deleted!');
+      notifySuccess('Post deleted');
       void navigate('/');
     } catch (error) {
       notifyError(toErrorMessage(error));
@@ -47,18 +48,18 @@ export default function PostModal({ post, showModal, onClose }: PostModalProps) 
 
   const handleEdit = async () => {
     onClose();
-    if (!(await confirmAction('Are you sure you want to edit this post?'))) return;
+    if (!(await confirmAction('Edit this post?'))) return;
     startEditing(post);
-    scrollToNewPost();
+    scrollToComposer();
   };
 
   const handleCopyLink = async () => {
     onClose();
     try {
       await navigator.clipboard.writeText(postUrl(post._id));
-      notifySuccess('Link copied!');
+      notifySuccess('Link copied');
     } catch {
-      notifyError('Could not copy the link.');
+      notifyError('Could not copy the link');
     }
   };
 
@@ -66,24 +67,35 @@ export default function PostModal({ post, showModal, onClose }: PostModalProps) 
 
   return (
     <>
-      {portal(<Overlay onClose={onClose} className={classes.overlay ?? ''} />, 'overlay-root')}
+      {portal(<Overlay onClose={onClose} />, 'overlay-root')}
       {portal(
         <Modal className={classes.modal ?? ''}>
-          <Link to={`/post/${post._id}`} onClick={onClose}>
-            <div className={classes.modalContent}>View Post</div>
+          <Link to={`/post/${post._id}`} onClick={onClose} className={classes.item}>
+            <Icon name="grid" size={16} />
+            View post
           </Link>
+
+          <button type="button" className={classes.item} onClick={handleCopyLink}>
+            <Icon name="share" size={16} />
+            Copy link
+          </button>
+
           {isOwner && (
-            <div className={classes.modalContent} onClick={handleEdit}>
-              Edit Post
-            </div>
+            <button type="button" className={classes.item} onClick={handleEdit}>
+              <Icon name="edit" size={16} />
+              Edit post
+            </button>
           )}
-          <div className={classes.modalContent} onClick={handleCopyLink}>
-            Copy Link
-          </div>
+
           {isOwner && (
-            <div className={classes.modalContent} onClick={handleDelete}>
-              Delete Post
-            </div>
+            <button
+              type="button"
+              className={`${classes.item} ${classes.danger}`}
+              onClick={handleDelete}
+            >
+              <Icon name="close" size={16} />
+              Delete post
+            </button>
           )}
         </Modal>,
         'modal-root',
