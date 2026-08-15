@@ -140,9 +140,8 @@ sequenceDiagram
     U->>C: type caption and tags
     C->>PF: setField('message' | 'tags', value)
     U->>IMG: choose an image
-    IMG->>IMG: compressorjs quality 0.6
-    IMG->>IMG: FileReader → base64 data URL
-    IMG->>PF: setField('image', base64)
+    Note over IMG: see 5.13 — resize, then R2 URL or base64
+    IMG->>PF: setField('image', url | base64)
     U->>C: submit
     C->>C: reject empty caption or missing image
     C->>H: mutateAsync(data)
@@ -406,3 +405,58 @@ flowchart LR
 
 The share origin comes from `VITE_SHARE_BASE_URL` (defaulting to the current origin) instead of a
 hardcoded Netlify URL, so links are correct in every environment.
+
+---
+
+## 5.13 Uploading an image
+
+`UI/Form/Image` has two modes. It asks the server which one is live, then takes that branch. The
+resize step runs either way — it is what actually shrank the payload.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant IMG as UI/Form/Image
+    participant IL as lib/image.ts
+    participant API as Express API
+    participant R2 as Cloudflare R2
+    participant PF as PostFormContext
+
+    IMG->>API: GET /uploads/config (cached by React Query)
+    API-->>IMG: { enabled, maxBytes }
+
+    U->>IMG: choose a file
+    IMG->>IL: compressImage(file)
+    IL->>IL: canvas resize, longest edge ≤ 1600px
+    IL->>IL: re-encode as JPEG q0.72
+    IL-->>IMG: compressed Blob
+
+    alt R2 configured
+        IMG->>API: POST /uploads/sign { contentType, size }
+        API->>API: auth guard, size + MIME check
+        API->>R2: getSignedUrl(PutObject, posts/<uuid>.jpg)
+        API-->>IMG: { uploadUrl, publicUrl }
+        IMG->>R2: PUT bytes directly (plain fetch, no JWT)
+        R2-->>IMG: 200
+        IMG->>PF: setField('image', publicUrl)
+    else R2 not configured
+        IMG->>IL: toBase64(blob)
+        IL-->>IMG: data: URL
+        IMG->>PF: setField('image', dataUrl)
+    end
+```
+
+Why it is shaped this way:
+
+| Decision | Reason |
+| --- | --- |
+| Browser PUTs straight to R2 | Image bytes never touch the free-tier Render instance |
+| Presigned URL, not a proxy route | No streaming, no memory spike, no request-size limit to raise |
+| Plain `fetch`, not the axios instance | The axios interceptor attaches the JWT — it must not reach R2 |
+| `isR2Configured()` gate | Unset credentials fall back to base64, so the code ships before the bucket exists |
+| Resize before either branch | 1600px is the cap that turned 2.3 MB images into ~50 KB |
+| `cache-control: immutable` on the object | Keys are content-addressed by uuid, so they can be cached forever |
+
+Existing base64 posts are migrated with `npm run migrate:images` in `server/` — a dry run by default,
+`-- --apply` to write. It is idempotent: `isRemoteImage()` skips anything already on R2.
