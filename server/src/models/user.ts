@@ -10,6 +10,12 @@ export interface UserDoc {
   password?: string;
   image?: string;
   bio: string;
+  /**
+   * SHA-256 of the password-reset token. Only the hash is stored, so a leaked
+   * database cannot be used to reset anyone's password.
+   */
+  resetTokenHash?: string;
+  resetTokenExpires?: Date;
 }
 
 const userSchema = new Schema<UserDoc>({
@@ -19,6 +25,9 @@ const userSchema = new Schema<UserDoc>({
   password: { type: String },
   image: { type: String },
   bio: { type: String, default: '----', required: true },
+  // `select: false` keeps these out of every ordinary read by default.
+  resetTokenHash: { type: String, select: false },
+  resetTokenExpires: { type: Date, select: false },
 });
 
 export const User: Model<UserDoc> = model<UserDoc>('User', userSchema);

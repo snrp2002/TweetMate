@@ -36,6 +36,44 @@
   color: var(--text-3);
 }
 
+/* Sits at the end of the meta row, revealed on hover or keyboard focus so it
+   does not clutter a thread you cannot moderate. */
+.delete {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  padding: 3px;
+  border-radius: 6px;
+  color: var(--text-3);
+  opacity: 0;
+  transition:
+    opacity 0.18s var(--ease),
+    color 0.18s var(--ease),
+    background 0.18s var(--ease);
+}
+
+.item:hover .delete,
+.delete:focus-visible {
+  opacity: 1;
+}
+
+.delete:hover {
+  color: #e5806f;
+  background: rgba(229, 128, 111, 0.12);
+}
+
+.delete:disabled {
+  opacity: 0.45;
+  cursor: progress;
+}
+
+/* Touch devices have no hover, so never hide the control there. */
+@media (hover: none) {
+  .delete {
+    opacity: 1;
+  }
+}
+
 .text {
   margin: 0;
   font-size: 14.5px;

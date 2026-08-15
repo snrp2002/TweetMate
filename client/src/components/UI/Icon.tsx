@@ -14,6 +14,7 @@ export type IconName =
   | 'more'
   | 'image'
   | 'close'
+  | 'trash'
   | 'crosshair';
 
 const PATHS: Record<IconName, ReactElement> = {
@@ -93,6 +94,14 @@ const PATHS: Record<IconName, ReactElement> = {
   close: (
     <>
       <path d="M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4.4 6.6h15.2" />
+      <path d="M9.2 6.6V4.8h5.6v1.8" />
+      <path d="M6.4 6.6l1 12.2a1.4 1.4 0 0 0 1.4 1.3h6.4a1.4 1.4 0 0 0 1.4-1.3l1-12.2" />
+      <path d="M10.4 10.4v6M13.6 10.4v6" />
     </>
   ),
   crosshair: (

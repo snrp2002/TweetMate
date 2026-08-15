@@ -31,8 +31,20 @@ Kept here because the shapes still explain why the code looks the way it does.
 | Unused deps: `react-file-base64`, `google-auth-library`, `moment`, `web-vitals` | Removed (`date-fns` replaces `moment`) |
 | No tests at all | 57-assertion end-to-end smoke suite |
 | Images were base64 blobs in Mongo | Uploaded to Cloudinary; posts store URLs (see 5.13) |
+| No way to remove a comment | `DELETE /comments/:postId/:commentId` — comment author or post owner |
+| Forgetting your password locked you out permanently | Reset by email, hashed single-use token |
+| Any account could mint unlimited upload signatures | Rate limits on uploads, auth and writes |
 
 ## 6.2 Still true — know these
+
+### Password reset needs a mail provider
+`RESEND_API_KEY` and `MAIL_FROM` are optional. Without them `/auth/forgot` returns **503** and the UI
+says so — the flow is built but inert. Set `CLIENT_URL` too, or reset links will point at
+`localhost:3000`.
+
+### Rate limit counters are per-process and in memory
+They reset on every deploy and would multiply across instances. Fine for one free-tier instance,
+wrong the moment there are two — that needs a shared store.
 
 ### Object storage is optional, and off until it is configured
 `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` and `CLOUDINARY_API_SECRET` are all optional. With any

@@ -3,6 +3,7 @@
  * Run with: npx tsx smoke.ts
  */
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import { createHash, randomBytes } from 'node:crypto';
 
 const mongod = await MongoMemoryServer.create();
 process.env['DATABASE_URL'] = mongod.getUri('tweetmate_smoke');
@@ -12,6 +13,7 @@ process.env['PORT'] = '0';
 const mongoose = (await import('mongoose')).default;
 const { createApp } = await import('../src/app.js');
 const { publicIdFromUrl } = await import('../src/lib/storage.js');
+const { resetRateLimits } = await import('../src/middleware/rateLimit.js');
 
 mongoose.set('strictQuery', false);
 await mongoose.connect(process.env['DATABASE_URL']);
@@ -275,6 +277,205 @@ check('thread readable', thread.status === 200 && thread.body.comments.length ==
 
 const feed2 = await call('GET', '/posts');
 check('commentCount incremented', feed2.body[0]?.commentCount === 1, feed2.body[0]?.commentCount);
+
+console.log('\n--- deleting comments');
+
+// Every request in this suite comes from 127.0.0.1, so unrelated sections
+// would otherwise share rate-limit buckets and fail for the wrong reason.
+resetRateLimits();
+
+// Grace wrote the comment; Ada owns the post. A third party may not remove it.
+const outsider = await call('POST', '/auth/signup', {
+  body: {
+    firstName: 'Mary',
+    lastName: 'Somerville',
+    email: 'mary@example.com',
+    password: 'pw123456',
+    confirmPassword: 'pw123456',
+  },
+});
+const alanToken: string = outsider.body.token;
+check('outsider account created', outsider.status === 200 && !!alanToken, outsider.body);
+const commentId: string = comment1.body.comments[0]._id;
+
+const delNoAuth = await call('DELETE', `/comments/${postId}/${commentId}`);
+check('delete comment without token → 401', delNoAuth.status === 401, delNoAuth.body);
+
+const delStranger = await call('DELETE', `/comments/${postId}/${commentId}`, { token: alanToken });
+check('a stranger cannot delete a comment', delStranger.status === 403, delStranger.body);
+
+const delMissing = await call('DELETE', `/comments/${postId}/64dc7e52b431d1ac8d0d8149`, {
+  token: graceToken,
+});
+check('deleting an unknown comment → 404', delMissing.status === 404, delMissing.body);
+
+// The post owner can clear a comment off their own photo, even though someone
+// else wrote it — that is the whole point of the second permission.
+const delByOwner = await call('DELETE', `/comments/${postId}/${commentId}`, { token: adaToken });
+check(
+  'the post owner can delete someone else\u2019s comment',
+  delByOwner.status === 200 && delByOwner.body.comments.length === 0,
+  delByOwner.body,
+);
+
+const feedAfterDelete = await call('GET', '/posts');
+check(
+  'commentCount decremented',
+  feedAfterDelete.body[0]?.commentCount === 0,
+  feedAfterDelete.body[0]?.commentCount,
+);
+
+// Re-comment so later assertions still have a thread to work with.
+const comment2 = await call('POST', '/comments', {
+  token: graceToken,
+  body: { postId, comment: { comment: 'second pass' } },
+});
+const comment2Id: string = comment2.body.comments[0]._id;
+const delByAuthor = await call('DELETE', `/comments/${postId}/${comment2Id}`, {
+  token: graceToken,
+});
+check('the comment author can delete their own', delByAuthor.status === 200, delByAuthor.body);
+
+await call('POST', '/comments', {
+  token: graceToken,
+  body: { postId, comment: { comment: 'nice work!' } },
+});
+
+console.log('\n--- password reset (mail unconfigured in tests)');
+
+const forgotEmpty = await call('POST', '/auth/forgot', { body: {} });
+check('forgot without an address → 400', forgotEmpty.status === 400, forgotEmpty.body);
+
+const forgotUnconfigured = await call('POST', '/auth/forgot', {
+  body: { email: 'ada@example.com' },
+});
+check(
+  'forgot → 503 when mail is not configured',
+  forgotUnconfigured.status === 503,
+  forgotUnconfigured.body,
+);
+
+const resetBadToken = await call('POST', '/auth/reset', {
+  body: {
+    token: 'not-a-real-token',
+    email: 'ada@example.com',
+    password: 'newpassword',
+    confirmPassword: 'newpassword',
+  },
+});
+check('reset with a bogus token → 400', resetBadToken.status === 400, resetBadToken.body);
+
+const resetMismatch = await call('POST', '/auth/reset', {
+  body: {
+    token: 'x',
+    email: 'ada@example.com',
+    password: 'newpassword',
+    confirmPassword: 'different',
+  },
+});
+check('reset rejects mismatched passwords', resetMismatch.status === 400, resetMismatch.body);
+
+// The reset fields must never ride along on an ordinary profile read.
+const profileLeak = await call('GET', `/user/${adaId}`);
+check(
+  'profile never exposes reset-token fields',
+  profileLeak.body.resetTokenHash === undefined &&
+    profileLeak.body.resetTokenExpires === undefined,
+  Object.keys(profileLeak.body),
+);
+
+// Drive the happy path without a mail provider by writing the token hash onto
+// the user exactly as forgotPassword would. This is the part that actually
+// matters: without it only the rejection paths would be covered.
+const rawToken = randomBytes(32).toString('hex');
+const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+
+await User.updateOne(
+  { email: 'grace@example.com' },
+  { resetTokenHash: tokenHash, resetTokenExpires: new Date(Date.now() + 10 * 60 * 1000) },
+);
+
+const resetOk = await call('POST', '/auth/reset', {
+  body: {
+    token: rawToken,
+    email: 'grace@example.com',
+    password: 'brandnewpw',
+    confirmPassword: 'brandnewpw',
+  },
+});
+check(
+  'a valid token resets the password and returns a session',
+  resetOk.status === 200 && !!resetOk.body.token && !!resetOk.body.user,
+  resetOk.body,
+);
+
+const signInNew = await call('POST', '/auth/signin', {
+  body: { email: 'grace@example.com', password: 'brandnewpw' },
+});
+check('the new password works', signInNew.status === 200, signInNew.body);
+
+const signInOld = await call('POST', '/auth/signin', {
+  body: { email: 'grace@example.com', password: 'pw123456' },
+});
+check('the old password stops working', signInOld.status === 400, signInOld.body);
+
+// Burned on use, so an intercepted link cannot be replayed.
+const replay = await call('POST', '/auth/reset', {
+  body: {
+    token: rawToken,
+    email: 'grace@example.com',
+    password: 'anotherpw',
+    confirmPassword: 'anotherpw',
+  },
+});
+check('the token cannot be replayed', replay.status === 400, replay.body);
+
+// An expired token must fail even though the hash still matches.
+const staleToken = randomBytes(32).toString('hex');
+await User.updateOne(
+  { email: 'grace@example.com' },
+  {
+    resetTokenHash: createHash('sha256').update(staleToken).digest('hex'),
+    resetTokenExpires: new Date(Date.now() - 1000),
+  },
+);
+const expired = await call('POST', '/auth/reset', {
+  body: {
+    token: staleToken,
+    email: 'grace@example.com',
+    password: 'anotherpw',
+    confirmPassword: 'anotherpw',
+  },
+});
+check('an expired token is refused', expired.status === 400, expired.body);
+
+console.log('\n--- rate limiting');
+
+resetRateLimits();
+
+// signin allows 20 per window; the 21st must be refused even with good
+// credentials, otherwise the limiter is not actually protecting anything.
+let limited = 0;
+let lastStatus = 0;
+for (let i = 0; i < 24; i += 1) {
+  const attempt = await call('POST', '/auth/signin', {
+    body: { email: 'ada@example.com', password: 'wrong-password' },
+  });
+  lastStatus = attempt.status;
+  if (attempt.status === 429) limited += 1;
+}
+check('repeated sign-in attempts hit a 429', limited > 0 && lastStatus === 429, {
+  limitedResponses: limited,
+});
+
+const stillLimited = await call('POST', '/auth/signin', {
+  body: { email: 'ada@example.com', password: 'pw123456' },
+});
+check(
+  'the limit applies even to correct credentials',
+  stillLimited.status === 429 && typeof stillLimited.body.message === 'string',
+  stillLimited.body,
+);
 
 console.log('\n--- image uploads (storage unconfigured in tests)');
 

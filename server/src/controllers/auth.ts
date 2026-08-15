@@ -1,10 +1,12 @@
 import type { RequestHandler } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { User } from '../models/user.js';
 import { env } from '../config/env.js';
 import { errorMessage } from '../lib/serialize.js';
 import { verifyGoogleAccessToken } from '../lib/google.js';
+import { isMailConfigured, resetEmail, sendMail } from '../lib/mail.js';
 import type { AuthResponse, SignInBody, SignUpBody } from '../types/api.js';
 import type { TokenPayload } from '../middleware/auth.js';
 
@@ -124,3 +126,125 @@ export const signUp: RequestHandler = async (req, res) => {
     res.status(400).json({ message: errorMessage(error) });
   }
 };
+
+/* --- Password reset ------------------------------------------------------ */
+
+const RESET_TTL_MINUTES = 30;
+
+/** Only the hash is ever stored, so the database alone cannot reset anyone. */
+function hashResetToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+/**
+ * Starts a password reset.
+ *
+ * Always answers 200, whether or not the address exists. Saying "no such user"
+ * would turn this into an oracle for which email addresses have accounts.
+ */
+export const forgotPassword: RequestHandler = async (req, res) => {
+  const email = (req.body as { email?: string }).email?.trim().toLowerCase();
+
+  if (!email) {
+    res.status(400).json({ message: 'Enter your email address.' });
+    return;
+  }
+
+  if (!isMailConfigured()) {
+    res.status(503).json({ message: 'Password reset is not available on this server.' });
+    return;
+  }
+
+  const generic = { message: 'If that address has an account, a reset link is on its way.' };
+
+  try {
+    const user = await User.findOne({ email });
+
+    // A Google-only account has no password to reset; treat it like a miss so
+    // the response stays uniform.
+    if (!user || !user.password) {
+      res.status(200).json(generic);
+      return;
+    }
+
+    const token = randomBytes(32).toString('hex');
+    user.resetTokenHash = hashResetToken(token);
+    user.resetTokenExpires = new Date(Date.now() + RESET_TTL_MINUTES * 60 * 1000);
+    await user.save();
+
+    const link = `${env.clientUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+    const { subject, text, html } = resetEmail(user.name, link, RESET_TTL_MINUTES);
+
+    try {
+      await sendMail({ to: email, subject, text, html });
+    } catch (mailError) {
+      // Do not strand a token that was never delivered.
+      user.resetTokenHash = undefined;
+      user.resetTokenExpires = undefined;
+      await user.save();
+      throw mailError;
+    }
+
+    res.status(200).json(generic);
+  } catch (error) {
+    res.status(500).json({ message: errorMessage(error) });
+  }
+};
+
+/** Completes a reset. The token is single-use and time-limited. */
+export const resetPassword: RequestHandler = async (req, res) => {
+  const { token, email, password, confirmPassword } = req.body as {
+    token?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  };
+
+  if (!token || !email || !password) {
+    res.status(400).json({ message: 'That reset link is incomplete.' });
+    return;
+  }
+  if (password !== confirmPassword) {
+    res.status(400).json({ message: "Passwords don't match." });
+    return;
+  }
+  if (password.length < 6) {
+    res.status(400).json({ message: 'Use at least 6 characters.' });
+    return;
+  }
+
+  try {
+    const user = await User.findOne({ email: email.trim().toLowerCase() }).select(
+      '+resetTokenHash +resetTokenExpires',
+    );
+
+    const valid =
+      user?.resetTokenHash &&
+      user.resetTokenExpires &&
+      user.resetTokenExpires.getTime() > Date.now() &&
+      timingSafeEqualHex(user.resetTokenHash, hashResetToken(token));
+
+    if (!user || !valid) {
+      res.status(400).json({ message: 'That reset link is invalid or has expired.' });
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(SALT_ROUNDS);
+    user.password = await bcrypt.hash(password, salt);
+    // Burn the token so the link cannot be replayed.
+    user.resetTokenHash = undefined;
+    user.resetTokenExpires = undefined;
+    await user.save();
+
+    res.status(200).json(authResponse(user));
+  } catch (error) {
+    res.status(400).json({ message: errorMessage(error) });
+  }
+};
+
+/** Constant-time compare of two hex digests of equal length. */
+function timingSafeEqualHex(a: string, b: string): boolean {
+  const left = Buffer.from(a, 'hex');
+  const right = Buffer.from(b, 'hex');
+  return left.length === right.length && timingSafeEqual(left, right);
+}

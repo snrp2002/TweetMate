@@ -14,3 +14,8 @@ export async function addComment(postId: string, comment: string): Promise<Comme
   });
   return data;
 }
+
+export async function deleteComment(postId: string, commentId: string): Promise<CommentThread> {
+  const { data } = await api.delete<CommentThread>(`/comments/${postId}/${commentId}`);
+  return data;
+}

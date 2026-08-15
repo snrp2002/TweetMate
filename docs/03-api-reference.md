@@ -15,6 +15,8 @@ Authorization: Bearer <token>
 | `GET` | `/health` | — | inline | Liveness + Mongo connection state |
 | `POST` | `/auth/signup` | — | `signUp` | Register (email/password **or** Google) |
 | `POST` | `/auth/signin` | — | `signIn` | Log in (email/password **or** Google) |
+| `POST` | `/auth/forgot` | — | `forgotPassword` | Email a reset link |
+| `POST` | `/auth/reset` | — | `resetPassword` | Set a new password from a token |
 | `GET` | `/posts` | — | `getPosts` | Feed, newest first, author-hydrated |
 | `GET` | `/posts/post/:id` | — | `getPost` | One post, author-hydrated |
 | `POST` | `/posts` | ✅ | `createPost` | Create a post |
@@ -25,6 +27,7 @@ Authorization: Bearer <token>
 | `PATCH` | `/user/editUser` | ✅ | `editUser` | Update own `bio` and `image` |
 | `GET` | `/comments/:postId` | — | `getComments` | Comment thread, commenter-hydrated |
 | `POST` | `/comments` | ✅ | `addComments` | Append a comment |
+| `DELETE` | `/comments/:postId/:commentId` | ✅ 🔑 | `deleteComment` | Remove a comment |
 | `GET` | `/uploads/config` | — | `uploadConfig` | Is object storage on, and the size cap |
 | `POST` | `/uploads/sign` | ✅ | `signUpload` | Presigned R2 `PutObject` URL |
 
@@ -182,7 +185,53 @@ Body `{ postId, comment: { comment } }`. **The author is taken from the token**,
 endpoint used to be unauthenticated and trusted `comment.user`, so anyone could post as anyone.
 Empty comments are rejected with `400`. Increments `Post.commentCount`.
 
-## 3.7 Upload endpoints
+### `DELETE /comments/:postId/:commentId` 🔒🔑
+Two people may delete a comment: **whoever wrote it, and whoever owns the post**. The second case is
+the point — without it there is no way to take an abusive comment off your own photo. Returns the
+updated thread. `commentCount` is decremented under a `{ $gt: 0 }` guard so it can never go negative.
+
+## 3.7 Password reset
+
+Both routes are rate limited, and both are inert unless `RESEND_API_KEY` and `MAIL_FROM` are set —
+`/auth/forgot` answers **`503`** when mail is unconfigured.
+
+### `POST /auth/forgot`
+Body `{ email }`. **Always answers `200`** with the same message whether or not the address has an
+account; saying "no such user" would turn this into an oracle for which addresses are registered.
+Google-only accounts have no password to reset and are treated the same way.
+
+Generates a 32-byte token, stores only its **SHA-256 hash** plus a 30-minute expiry, and emails the
+raw token as a link. If the email fails to send, the stored token is cleared rather than left
+stranded.
+
+### `POST /auth/reset`
+Body `{ token, email, password, confirmPassword }`. Compares hashes in constant time, checks the
+expiry, then writes a new bcrypt hash and **clears the token so the link cannot be replayed**.
+Returns a session, so the user is signed in rather than bounced back to a login form.
+
+## 3.8 Rate limiting
+
+A small in-process fixed-window limiter (`middleware/rateLimit.ts`). Keyed by user id when the
+request is authenticated, otherwise by client IP from `X-Forwarded-For`.
+
+| Route | Limit |
+| --- | --- |
+| `POST /auth/signin` | 20 / 15 min |
+| `POST /auth/signup` | 30 / hour |
+| `POST /auth/forgot` | 5 / hour |
+| `POST /auth/reset` | 10 / hour |
+| `POST /uploads/sign` | 40 / hour **per account** |
+| `POST`/`PATCH /posts` | 60 / hour |
+| `POST /comments` | 120 / hour |
+
+`/uploads/sign` is the one that matters most: every signature is a licence to write an object to the
+Cloudinary bucket, so without a cap one account could exhaust the storage allowance.
+
+Counters live in memory, so they **reset on deploy** and would multiply across instances. That is an
+acceptable trade for a single free-tier instance; a shared store would be needed before scaling out.
+Exceeding a limit returns **`429`** with a `Retry-After` header.
+
+## 3.9 Upload endpoints
 
 ### `GET /uploads/config`
 No auth. Returns `{ enabled: boolean, maxBytes: number }`. `enabled` is false when the Cloudinary
@@ -210,7 +259,7 @@ with `400`, anything over `maxBytes` with `413`, and returns **`503`** when stor
 
 **The API secret never leaves the server.** Only the signature does.
 
-## 3.8 Error conventions
+## 3.10 Error conventions
 
 Bodies are always `{ "message": "<text>" }`.
 
@@ -228,7 +277,7 @@ Bodies are always `{ "message": "<text>" }`.
 There is now a catch-all `404` handler for unknown routes and a top-level error handler, so the API
 never returns Express's HTML error page.
 
-## 3.9 Verification
+## 3.11 Verification
 
 `server/test/smoke.ts` mounts the real app against an in-memory MongoDB and asserts **47** behaviours
 across every endpoint — auth, ownership (403s), the token-over-body comment author, password-hash

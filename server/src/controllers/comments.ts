@@ -74,3 +74,56 @@ export const addComments: RequestHandler = async (req, res) => {
     res.status(400).json({ message: errorMessage(error) });
   }
 };
+
+/**
+ * Removes one comment.
+ *
+ * Two people may delete it: whoever wrote it, and whoever owns the post. The
+ * second case matters — without it there is no way to take an abusive comment
+ * off your own photo.
+ */
+export const deleteComment: RequestHandler = async (req, res) => {
+  const userId = req.userId;
+  if (!userId) {
+    res.status(401).json({ message: 'Not Logged In!' });
+    return;
+  }
+
+  const { postId, commentId } = req.params;
+
+  // Express 5 types params as string | string[]; narrow before use.
+  if (typeof postId !== 'string' || typeof commentId !== 'string') {
+    res.status(400).json({ message: 'Comment not specified.' });
+    return;
+  }
+
+  try {
+    const thread = await Comments.findOne({ postId });
+    const entry = thread?.comments.id(commentId);
+
+    if (!thread || !entry) {
+      res.status(404).json({ message: 'Comment not found.' });
+      return;
+    }
+
+    const isCommentAuthor = entry.user === userId;
+    // Missing posts are tolerated: the thread may outlive a deleted post.
+    const post = await Post.findById(postId).select('creator').lean();
+    const isPostOwner = post?.creator === userId;
+
+    if (!isCommentAuthor && !isPostOwner) {
+      res.status(403).json({ message: 'You can only delete your own comments.' });
+      return;
+    }
+
+    entry.deleteOne();
+    await thread.save();
+
+    // Never let the denormalised counter go negative, whatever it started at.
+    await Post.updateOne({ _id: postId, commentCount: { $gt: 0 } }, { $inc: { commentCount: -1 } });
+
+    res.status(200).json(await toThreadResponse(thread.toObject()));
+  } catch (error) {
+    res.status(400).json({ message: errorMessage(error) });
+  }
+};

@@ -131,7 +131,7 @@ export default function Post({ post, order = 0 }: PostProps) {
           </WhatsappShareButton>
         </div>
 
-        {showComments && <Comments postId={post._id} />}
+        {showComments && <Comments postId={post._id} postCreator={post.creator} />}
       </article>
 
       <PostModal post={post} showModal={showModal} onClose={() => setShowModal(false)} />

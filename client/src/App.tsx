@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import AuthPage from './pages/AuthPage';
 import PostPage from './pages/PostPage';
 import UserPage from './pages/UserPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import ErrorPage from './pages/ErrorPage';
 import NotFound from './pages/NotFound';
 
@@ -16,6 +17,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'auth', element: <AuthPage /> },
+      { path: 'reset-password', element: <ResetPasswordPage /> },
       { path: 'post/:postId', element: <PostPage /> },
       { path: 'user/:userId', element: <UserPage /> },
     ],
