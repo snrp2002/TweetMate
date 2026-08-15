@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import Icon from '../Icon';
 import classes from './Image.module.css';
 import { compressImage, toBase64 } from '../../../lib/image';
+import { feedImage } from '../../../lib/cloudinary';
 import { fetchUploadConfig, uploadImage } from '../../../api/uploads';
 import { toErrorMessage } from '../../../api/client';
 
@@ -59,7 +60,7 @@ export default function Image({ value, onDone, label = 'Drop a photo' }: ImagePr
       <label htmlFor={inputId} className={`${classes.drop} ${value ? classes.hasImage : ''}`}>
         {value ? (
           <>
-            <img src={value} alt="Selected" className={classes.preview} />
+            <img src={feedImage(value)} alt="Selected" className={classes.preview} />
             <span className={classes.swap}>
               <Icon name="image" size={14} />
               {busy ? 'Uploading…' : 'Replace'}

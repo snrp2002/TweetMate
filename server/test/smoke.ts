@@ -11,6 +11,7 @@ process.env['PORT'] = '0';
 
 const mongoose = (await import('mongoose')).default;
 const { createApp } = await import('../src/app.js');
+const { publicIdFromUrl } = await import('../src/lib/storage.js');
 
 mongoose.set('strictQuery', false);
 await mongoose.connect(process.env['DATABASE_URL']);
@@ -274,11 +275,11 @@ check('thread readable', thread.status === 200 && thread.body.comments.length ==
 const feed2 = await call('GET', '/posts');
 check('commentCount incremented', feed2.body[0]?.commentCount === 1, feed2.body[0]?.commentCount);
 
-console.log('\n--- image uploads (R2 unconfigured in tests)');
+console.log('\n--- image uploads (storage unconfigured in tests)');
 
 const upCfg = await call('GET', '/uploads/config');
 check(
-  'upload config reports disabled without R2 creds',
+  'upload config reports disabled without storage creds',
   upCfg.status === 200 && upCfg.body.enabled === false && typeof upCfg.body.maxBytes === 'number',
   upCfg.body,
 );
@@ -293,10 +294,26 @@ const signUnconfigured = await call('POST', '/uploads/sign', {
   body: { contentType: 'image/jpeg', size: 1000 },
 });
 check(
-  'sign upload → 503 when R2 is not configured',
+  'sign upload → 503 when storage is not configured',
   signUnconfigured.status === 503,
   signUnconfigured.body,
 );
+
+// publicIdFromUrl is what makes deleting a post delete its image, so it has to
+// survive both plain and transformed delivery URLs.
+check(
+  'publicIdFromUrl reads a plain delivery URL',
+  publicIdFromUrl(
+    'https://res.cloudinary.com/demo/image/upload/v1699999999/tweetmate/posts/abc.jpg',
+  ) === 'tweetmate/posts/abc',
+);
+check(
+  'publicIdFromUrl ignores transformation segments',
+  publicIdFromUrl(
+    'https://res.cloudinary.com/demo/image/upload/f_auto,q_auto,w_900/v1699999999/tweetmate/posts/abc.webp',
+  ) === 'tweetmate/posts/abc',
+);
+check('publicIdFromUrl rejects a non-Cloudinary URL', publicIdFromUrl('data:image/png;base64,x') === null);
 
 // The whole point of the fallback: posting still works with inline base64.
 const fallbackPost = await call('POST', '/posts', {

@@ -1,5 +1,6 @@
 import classes from './Avatar.module.css';
 import Icon from './Icon';
+import { avatarImage } from '../../lib/cloudinary';
 
 interface AvatarProps {
   src?: string | undefined;
@@ -31,7 +32,7 @@ export default function Avatar({ src, name, size = 40, onClick, accent = false }
 
   let content;
   if (src) {
-    content = <img src={src} alt={name ?? ''} />;
+    content = <img src={avatarImage(src, size)} alt={name ?? ''} loading="lazy" />;
   } else if (initial) {
     content = (
       <span className={classes.initial} aria-hidden="true">

@@ -1,10 +1,11 @@
 import Compressor from 'compressorjs';
 
 /**
- * R2 serves bytes exactly as uploaded — there is no transformation layer — so
- * the browser is the only place images get resized. Without a dimension cap a
- * modern phone photo arrives at several megabytes; capping the long edge is
- * what actually shrinks the payload, quality alone is not enough.
+ * Shrinking before upload is not strictly required — Cloudinary resizes on
+ * delivery — but it keeps the upload fast on a phone connection and stores a
+ * smaller original, which is what the free plan's storage credits are measured
+ * against. Capping the long edge is what does the work; quality alone is not
+ * enough for a modern camera photo.
  */
 const MAX_EDGE = 1600;
 const QUALITY = 0.72;

@@ -38,15 +38,12 @@ export const env = {
   corsOrigins: optionalList('CORS_ORIGINS'),
 
   /**
-   * Cloudflare R2. Entirely optional: when unset, images are stored inline as
+   * Cloudinary. Entirely optional: when unset, images are stored inline as
    * base64 exactly as before, so the app runs unchanged without credentials.
    */
-  r2: {
-    accountId: process.env['R2_ACCOUNT_ID'] ?? '',
-    accessKeyId: process.env['R2_ACCESS_KEY_ID'] ?? '',
-    secretAccessKey: process.env['R2_SECRET_ACCESS_KEY'] ?? '',
-    bucket: process.env['R2_BUCKET'] ?? '',
-    /** Public base URL of the bucket (r2.dev or a custom domain). */
-    publicUrl: process.env['R2_PUBLIC_URL'] ?? '',
+  cloudinary: {
+    cloudName: process.env['CLOUDINARY_CLOUD_NAME'] ?? '',
+    apiKey: process.env['CLOUDINARY_API_KEY'] ?? '',
+    apiSecret: process.env['CLOUDINARY_API_SECRET'] ?? '',
   },
 } as const;
