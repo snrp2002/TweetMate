@@ -134,6 +134,7 @@ const grace = await call('POST', '/auth/signup', {
 });
 check('second account created', grace.status === 200 && !!grace.body.token, grace.body);
 const graceToken: string = grace.body.token;
+const graceId: string = grace.body.user._id;
 
 console.log('\n--- google identity cannot be self-asserted');
 
@@ -348,6 +349,28 @@ const profile = await call('GET', `/user/${adaId}`);
 check('profile readable', profile.status === 200 && profile.body.name === 'Ada Lovelace', profile.body);
 check('profile omits password hash', profile.body.password === undefined, Object.keys(profile.body));
 check('profile lists the post', profile.body.posts?.[0] === postId, profile.body.posts);
+
+// The profile grid used to fetch one post per tile; this endpoint replaces
+// N requests with one, so it has to match what those N would have returned.
+const userPosts = await call('GET', `/user/${adaId}/posts`);
+check(
+  'user posts returns hydrated posts',
+  userPosts.status === 200 &&
+    Array.isArray(userPosts.body) &&
+    userPosts.body.length === 1 &&
+    userPosts.body[0]._id === postId,
+  userPosts.body,
+);
+check(
+  'user posts hydrates the author exactly like the feed does',
+  JSON.stringify(userPosts.body[0]) ===
+    JSON.stringify((await call('GET', '/posts')).body.find((p: any) => p._id === postId)),
+  { batch: userPosts.body[0] },
+);
+check(
+  'user posts excludes other authors',
+  (await call('GET', `/user/${graceId}/posts`)).body.length === 0,
+);
 
 const editProfileNoAuth = await call('PATCH', '/user/editUser', {
   body: { _id: adaId, bio: 'x', image: 'y' },

@@ -3,12 +3,15 @@ import * as postsApi from '../api/posts';
 import { queryKeys } from './keys';
 import type { EditPostInput, Post, PostInput } from '../types/api';
 
-/** Writes an updated post into both the feed cache and its own cache entry. */
+/** Writes an updated post into the feed, its own entry, and its author's grid. */
 function cachePost(queryClient: QueryClient, post: Post): void {
   queryClient.setQueryData<Post[]>(queryKeys.posts, (posts) =>
     posts?.map((existing) => (existing._id === post._id ? post : existing)),
   );
   queryClient.setQueryData(queryKeys.post(post._id), post);
+  queryClient.setQueryData<Post[]>(queryKeys.userPosts(post.creator), (posts) =>
+    posts?.map((existing) => (existing._id === post._id ? post : existing)),
+  );
 }
 
 export function usePosts() {
@@ -33,6 +36,28 @@ export function usePost(postId: string) {
     queryFn: () => postsApi.fetchPost(postId),
     placeholderData: () =>
       queryClient.getQueryData<Post[]>(queryKeys.posts)?.find((post) => post._id === postId),
+  });
+}
+
+/**
+ * Every post on a profile, in one request.
+ *
+ * Each result is also written into its own `['posts', id]` entry, so opening a
+ * tile renders immediately instead of refetching what we just downloaded.
+ */
+export function useUserPosts(userId: string) {
+  const queryClient = useQueryClient();
+
+  return useQuery({
+    queryKey: queryKeys.userPosts(userId),
+    queryFn: async () => {
+      const posts = await postsApi.fetchUserPosts(userId);
+      for (const post of posts) {
+        queryClient.setQueryData(queryKeys.post(post._id), post);
+      }
+      return posts;
+    },
+    enabled: userId !== '',
   });
 }
 
