@@ -19,6 +19,11 @@ export function createApp() {
   app.use(express.urlencoded({ limit: BODY_LIMIT, extended: true }));
   app.use(cors(env.corsOrigins ? { origin: env.corsOrigins } : undefined));
 
+  // Render terminates TLS at a proxy, so the client address arrives in
+  // X-Forwarded-For. Without this, req.ip is the proxy and every visitor
+  // would share one rate-limit bucket.
+  app.set('trust proxy', 1);
+
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'ok', db: mongoose.connection.readyState });
   });

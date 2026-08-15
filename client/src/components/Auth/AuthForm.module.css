@@ -64,3 +64,48 @@
     gap: 0;
   }
 }
+
+/* --- Password reset ------------------------------------------------------ */
+
+.asideTitle {
+  margin: 0 0 6px;
+  font-family: "Instrument Serif", serif;
+  font-size: 25px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.asideText {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.asideText b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.error {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #e5806f;
+}
+
+/* A quiet, text-weight action — never competes with the primary button. */
+.linkButton {
+  display: block;
+  margin: 14px auto 0;
+  padding: 4px 2px;
+  font-size: 13px;
+  color: var(--text-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s var(--ease);
+}
+
+.linkButton:hover {
+  color: var(--accent);
+}

@@ -46,4 +46,17 @@ export const env = {
     apiKey: process.env['CLOUDINARY_API_KEY'] ?? '',
     apiSecret: process.env['CLOUDINARY_API_SECRET'] ?? '',
   },
+
+  /**
+   * Transactional email, for password resets. Optional: without it the reset
+   * routes report that they are unavailable instead of failing obscurely.
+   */
+  mail: {
+    apiKey: process.env['RESEND_API_KEY'] ?? '',
+    /** e.g. `TweetMate <noreply@yourdomain.com>` */
+    from: process.env['MAIL_FROM'] ?? '',
+  },
+
+  /** Where reset links point. Must be the deployed client origin. */
+  clientUrl: (process.env['CLIENT_URL'] ?? 'http://localhost:3000').replace(/\/+$/, ''),
 } as const;

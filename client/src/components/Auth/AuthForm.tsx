@@ -2,6 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import classes from './AuthForm.module.css';
 import GoogleSignInButton from './GoogleSignInButton';
+import ForgotPassword from './ForgotPassword';
 import { Button } from '../UI/Form/Button';
 import Input from '../UI/Form/Input';
 import Loader from '../UI/Loader';
@@ -34,12 +35,14 @@ export default function AuthForm() {
   const { signIn, signUp } = useAuth();
 
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgot, setIsForgot] = useState(false);
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [busy, setBusy] = useState(false);
 
   const setMode = (next: boolean) => {
     if (next === isSignUp) return;
     setIsSignUp(next);
+    setIsForgot(false);
     setFormData(EMPTY_FORM);
   };
 
@@ -105,6 +108,8 @@ export default function AuthForm() {
   };
 
   if (busy) return <Loader label={isSignUp ? 'Creating your account' : 'Signing you in'} />;
+
+  if (isForgot) return <ForgotPassword onBack={() => setIsForgot(false)} />;
 
   return (
     <div>
@@ -206,6 +211,12 @@ export default function AuthForm() {
         <div className={classes.submit}>
           <Button type="submit">{isSignUp ? 'Create account' : 'Sign in'}</Button>
         </div>
+
+        {!isSignUp && (
+          <button type="button" className={classes.linkButton} onClick={() => setIsForgot(true)}>
+            Forgot your password?
+          </button>
+        )}
 
         {config.googleClientId ? (
           <>

@@ -30,6 +30,8 @@ interface AuthContextValue {
   signIn: (input: EmailSignInInput | GoogleAuthInput) => Promise<void>;
   signUp: (input: EmailSignUpInput | GoogleAuthInput) => Promise<void>;
   signOut: () => void;
+  /** Adopts a session obtained outside sign-in — currently a password reset. */
+  applySession: (session: Session) => void;
   /** Applied after a profile edit so the navbar avatar updates immediately. */
   updateUser: (user: AuthUser) => void;
 }
@@ -82,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn: async (input) => persist(await signInRequest(input)),
       signUp: async (input) => persist(await signUpRequest(input)),
       signOut,
+      applySession: persist,
       updateUser: (user) => {
         setSession((current) => {
           if (!current) return current;

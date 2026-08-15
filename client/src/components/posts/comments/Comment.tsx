@@ -2,9 +2,17 @@ import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import classes from './Comment.module.css';
 import Avatar from '../../UI/Avatar';
+import Icon from '../../UI/Icon';
 import type { Comment as CommentType } from '../../../types/api';
 
-export default function Comment({ comment }: { comment: CommentType }) {
+interface CommentProps {
+  comment: CommentType;
+  /** Shown only when the viewer is allowed to remove this comment. */
+  onDelete?: (() => void) | undefined;
+  deleting?: boolean;
+}
+
+export default function Comment({ comment, onDelete, deleting = false }: CommentProps) {
   const navigate = useNavigate();
   const goToProfile = () => void navigate(`/user/${comment.user}`);
 
@@ -21,6 +29,19 @@ export default function Comment({ comment }: { comment: CommentType }) {
             {comment.name}
           </button>
           <span className={classes.when}>{when}</span>
+
+          {onDelete && (
+            <button
+              type="button"
+              className={classes.delete}
+              onClick={onDelete}
+              disabled={deleting}
+              aria-label={`Delete comment by ${comment.name}`}
+              title="Delete comment"
+            >
+              <Icon name="trash" size={13} />
+            </button>
+          )}
         </p>
         <p className={classes.text}>{comment.comment}</p>
       </div>
