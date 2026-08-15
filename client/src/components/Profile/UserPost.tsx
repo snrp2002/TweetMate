@@ -1,22 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import classes from './UserPost.module.css';
 import Icon from '../UI/Icon';
-import { usePost } from '../../queries/posts';
 import { tileImage } from '../../lib/cloudinary';
+import type { Post } from '../../types/api';
 
 interface UserPostProps {
-  postId: string;
+  post: Post;
   order?: number;
 }
 
-export default function UserPost({ postId, order = 0 }: UserPostProps) {
+export default function UserPost({ post, order = 0 }: UserPostProps) {
   const navigate = useNavigate();
-  // React Query dedupes and caches these, so revisiting a profile is free.
-  const { data: post, isPending } = usePost(postId);
-
-  if (isPending || !post) {
-    return <div className={`${classes.tile} ${classes.skeleton}`} aria-hidden="true" />;
-  }
 
   return (
     <button

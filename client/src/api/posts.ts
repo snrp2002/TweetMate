@@ -11,6 +11,12 @@ export async function fetchPost(postId: string): Promise<Post> {
   return data;
 }
 
+/** Every post by one author, in a single request. */
+export async function fetchUserPosts(userId: string): Promise<Post[]> {
+  const { data } = await api.get<Post[]>(`/user/${userId}/posts`);
+  return data;
+}
+
 export async function createPost(input: PostInput): Promise<Post> {
   const { data } = await api.post<Post>('/posts', input);
   return data;

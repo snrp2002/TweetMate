@@ -24,7 +24,7 @@ export default function Profile() {
   return (
     <div className={classes.profile}>
       <User user={user} />
-      <UserPosts postIds={user.posts} />
+      <UserPosts userId={user._id} expectedCount={user.posts.length} />
     </div>
   );
 }

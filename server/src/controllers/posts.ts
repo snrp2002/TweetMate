@@ -17,8 +17,31 @@ export const getPosts: RequestHandler = async (_req, res) => {
   }
 };
 
+/**
+ * Every post by one author, newest first.
+ *
+ * The profile page used to fetch these one id at a time — one request per
+ * tile. Each round trip costs far more than the query itself, so batching
+ * them here turns N requests into one.
+ *
+ * Queried by `creator` rather than walking `user.posts`, so the order is
+ * authoritative and a stale id on the user document cannot produce a gap.
+ */
+export const getUserPosts: RequestHandler = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const posts = await Post.find({ creator: userId }).sort({ createdAt: -1 }).lean();
+    const authors = await loadAuthors(posts.map((post) => post.creator));
+    res.status(200).json(posts.map((post) => toPostResponse(post, authors.get(post.creator))));
+  } catch (error) {
+    res.status(404).json({ message: errorMessage(error) });
+  }
+};
+
 export const getPost: RequestHandler = async (req, res) => {
   const { id } = req.params;
+
 
   try {
     const post = await Post.findById(id).lean();
