@@ -30,27 +30,42 @@ function authResponse(user: {
   };
 }
 
+/**
+ * Signs in with Google, creating the account on first use.
+ *
+ * Google has already established who the caller is, so there is no meaningful
+ * sign-in/sign-up distinction: splitting the two only produced dead ends —
+ * "User not found!!" for a new user on the sign-in tab, and "User already
+ * exists!!" for a returning user on the sign-up tab.
+ */
+async function authenticateWithGoogle(accessToken: unknown): Promise<AuthResponse> {
+  // Identity comes from Google, never from the request body.
+  const identity = await verifyGoogleAccessToken(accessToken);
+
+  const existing = await User.findOne({ email: identity.email });
+  if (existing) {
+    // Backfill the avatar for accounts that never had one.
+    if (!existing.image && identity.picture) {
+      existing.image = identity.picture;
+      await existing.save();
+    }
+    return authResponse(existing);
+  }
+
+  const created = await User.create({
+    name: identity.name ?? identity.email.split('@')[0],
+    email: identity.email,
+    ...(identity.picture ? { image: identity.picture } : {}),
+  });
+  return authResponse(created);
+}
+
 export const signIn: RequestHandler = async (req, res) => {
   const data = req.body as SignInBody;
 
   try {
     if (data.google) {
-      // Identity comes from Google, never from the request body.
-      const identity = await verifyGoogleAccessToken(data.accessToken);
-
-      const user = await User.findOne({ email: identity.email });
-      if (!user) {
-        res.status(404).json({ message: 'User not found!!' });
-        return;
-      }
-
-      // Backfill the avatar for accounts that never had one.
-      if (!user.image && identity.picture) {
-        user.image = identity.picture;
-        await user.save();
-      }
-
-      res.status(200).json(authResponse(user));
+      res.status(200).json(await authenticateWithGoogle(data.accessToken));
       return;
     }
 
@@ -81,21 +96,8 @@ export const signUp: RequestHandler = async (req, res) => {
 
   try {
     if (data.google) {
-      const identity = await verifyGoogleAccessToken(data.accessToken);
-
-      const existing = await User.findOne({ email: identity.email });
-      if (existing) {
-        res.status(400).json({ message: 'User already exists!!' });
-        return;
-      }
-
-      const newUser = await User.create({
-        name: identity.name ?? identity.email.split('@')[0],
-        email: identity.email,
-        ...(identity.picture ? { image: identity.picture } : {}),
-      });
-
-      res.status(200).json(authResponse(newUser));
+      // Same upsert as sign-in: Google has already proven who this is.
+      res.status(200).json(await authenticateWithGoogle(data.accessToken));
       return;
     }
 
