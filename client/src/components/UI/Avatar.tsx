@@ -32,7 +32,9 @@ export default function Avatar({ src, name, size = 40, onClick, accent = false }
 
   let content;
   if (src) {
-    content = <img src={avatarImage(src, size)} alt={name ?? ''} loading="lazy" />;
+    // Not lazy: avatars are tiny and usually above the fold, so deferring them
+    // only delays first paint.
+    content = <img src={avatarImage(src, size)} alt={name ?? ''} />;
   } else if (initial) {
     content = (
       <span className={classes.initial} aria-hidden="true">
