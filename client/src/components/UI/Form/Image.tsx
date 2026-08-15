@@ -1,22 +1,14 @@
 import { useId, useState, type ChangeEvent } from 'react';
-import Compressor from 'compressorjs';
+import { useQuery } from '@tanstack/react-query';
 import Icon from '../Icon';
 import classes from './Image.module.css';
-
-const QUALITY = 0.6;
-
-function toBase64(file: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error ?? new Error('Could not read the file'));
-    reader.readAsDataURL(file);
-  });
-}
+import { compressImage, toBase64 } from '../../../lib/image';
+import { fetchUploadConfig, uploadImage } from '../../../api/uploads';
+import { toErrorMessage } from '../../../api/client';
 
 interface ImageProps {
   value: string;
-  onDone: (base64: string) => void;
+  onDone: (value: string) => void;
   label?: string;
 }
 
@@ -26,25 +18,40 @@ export default function Image({ value, onDone, label = 'Drop a photo' }: ImagePr
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  // Cached across mounts; decides upload-to-R2 vs inline base64 fallback.
+  const { data: config } = useQuery({
+    queryKey: ['uploadConfig'],
+    queryFn: fetchUploadConfig,
+    staleTime: Infinity,
+    retry: 1,
+  });
+
+  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
     setError(null);
     setBusy(true);
 
-    new Compressor(file, {
-      quality: QUALITY,
-      success: (compressed) => {
-        toBase64(compressed)
-          .then(onDone)
-          .catch(() => setError('Could not read that image.'))
-          .finally(() => setBusy(false));
-      },
-      error: () => {
-        setError('Could not compress that image.');
-        setBusy(false);
-      },
-    });
+    try {
+      const { blob } = await compressImage(file);
+
+      if (config?.enabled) {
+        if (blob.size > config.maxBytes) {
+          throw new Error('That image is too large.');
+        }
+        onDone(await uploadImage(blob));
+      } else {
+        // R2 not configured — keep the original inline behaviour.
+        onDone(await toBase64(blob));
+      }
+    } catch (uploadError) {
+      setError(toErrorMessage(uploadError, 'Could not use that image.'));
+    } finally {
+      setBusy(false);
+      // Allow re-selecting the same file after an error.
+      event.target.value = '';
+    }
   };
 
   return (
@@ -55,13 +62,13 @@ export default function Image({ value, onDone, label = 'Drop a photo' }: ImagePr
             <img src={value} alt="Selected" className={classes.preview} />
             <span className={classes.swap}>
               <Icon name="image" size={14} />
-              Replace
+              {busy ? 'Uploading…' : 'Replace'}
             </span>
           </>
         ) : (
           <span className={classes.empty}>
             <Icon name="image" size={22} />
-            <span className={classes.emptyLabel}>{busy ? 'Processing…' : label}</span>
+            <span className={classes.emptyLabel}>{busy ? 'Uploading…' : label}</span>
             <span className={classes.emptyHint}>JPG, PNG or GIF</span>
           </span>
         )}
@@ -73,6 +80,7 @@ export default function Image({ value, onDone, label = 'Drop a photo' }: ImagePr
         name="image"
         accept="image/*"
         onChange={handleChange}
+        disabled={busy}
         className={classes.file}
       />
 

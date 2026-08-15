@@ -25,6 +25,8 @@ Authorization: Bearer <token>
 | `PATCH` | `/user/editUser` | ✅ | `editUser` | Update own `bio` and `image` |
 | `GET` | `/comments/:postId` | — | `getComments` | Comment thread, commenter-hydrated |
 | `POST` | `/comments` | ✅ | `addComments` | Append a comment |
+| `GET` | `/uploads/config` | — | `uploadConfig` | Is object storage on, and the size cap |
+| `POST` | `/uploads/sign` | ✅ | `signUpload` | Presigned R2 `PutObject` URL |
 
 ✅ = requires a valid token &nbsp;•&nbsp; 🔑 = additionally requires **ownership**
 
@@ -180,23 +182,47 @@ Body `{ postId, comment: { comment } }`. **The author is taken from the token**,
 endpoint used to be unauthenticated and trusted `comment.user`, so anyone could post as anyone.
 Empty comments are rejected with `400`. Increments `Post.commentCount`.
 
-## 3.7 Error conventions
+## 3.7 Upload endpoints
+
+### `GET /uploads/config`
+No auth. Returns `{ enabled: boolean, maxBytes: number }`. `enabled` is false when the R2 environment
+variables are unset — the client uses it to decide between a presigned upload and the base64
+fallback. `maxBytes` is 8 MB.
+
+### `POST /uploads/sign` 🔒
+Body `{ contentType, size }`. Returns:
+
+```json
+{
+  "uploadUrl": "https://<account>.r2.cloudflarestorage.com/<bucket>/posts/<uuid>.jpg?X-Amz-...",
+  "publicUrl": "https://<public-host>/posts/<uuid>.jpg",
+  "key": "posts/<uuid>.jpg"
+}
+```
+
+`uploadUrl` is a presigned `PutObject` valid for 5 minutes; the browser PUTs the bytes there directly
+so they never pass through the API. Rejects unsupported MIME types with `400`, anything over
+`maxBytes` with `413`, and returns **`503`** when R2 is not configured.
+
+## 3.8 Error conventions
 
 Bodies are always `{ "message": "<text>" }`.
 
 | Status | Meaning |
 | --- | --- |
-| `400` | Validation failure (bad credentials, empty comment, mismatched passwords) |
+| `400` | Validation failure (bad credentials, empty comment, mismatched passwords, bad upload type) |
 | `401` | Missing, malformed or expired token |
 | `403` | Authenticated, but not the owner of the resource |
 | `404` | User, post or route not found |
 | `409` | Post creation failed |
+| `413` | Upload larger than the 8 MB cap |
 | `500` | Unexpected failure |
+| `503` | Object storage requested but not configured |
 
 There is now a catch-all `404` handler for unknown routes and a top-level error handler, so the API
 never returns Express's HTML error page.
 
-## 3.8 Verification
+## 3.9 Verification
 
 `server/test/smoke.ts` mounts the real app against an in-memory MongoDB and asserts **47** behaviours
 across every endpoint — auth, ownership (403s), the token-over-body comment author, password-hash

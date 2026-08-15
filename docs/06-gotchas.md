@@ -29,22 +29,33 @@ Kept here because the shapes still explain why the code looks the way it does.
 | Side effects (`Notification.fire`) during render | Fired from handlers and mutation callbacks |
 | `react-router-hash-link` (unmaintained, untyped) | Local `useScrollToHash` hook |
 | Unused deps: `react-file-base64`, `google-auth-library`, `moment`, `web-vitals` | Removed (`date-fns` replaces `moment`) |
-| No tests at all | 47-assertion end-to-end smoke suite |
+| No tests at all | 57-assertion end-to-end smoke suite |
+| Images were base64 blobs in Mongo | Uploaded to Cloudflare R2; posts store URLs (see 5.13) |
 
 ## 6.2 Still true — know these
 
-### Images are base64 blobs inside documents
-Every post image and avatar is a `data:` URL stored in Mongo. Hence the **30 MB** body limit and
-compressorjs at quality 0.6. Consequences:
-- `GET /posts` transfers every image on the site.
-- Images cannot be CDN-cached, range-requested, or lazily loaded.
+### Object storage is optional, and off until it is configured
+`R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` / `R2_PUBLIC_URL` are all
+optional. With any of them missing, `isR2Configured()` is false, `/uploads/sign` returns **503**, and
+the client silently falls back to inlining base64 — the old behaviour. That fallback is deliberate
+(the code deploys before the bucket exists) but it means **a half-configured environment looks fine
+and quietly regresses to 9 MB feeds**. Check `GET /uploads/config` if the feed is slow.
 
-**Fixing this properly means object storage (S3/Cloudinary) and storing URLs.** It is the single
-highest-impact change left.
+Two things live outside the repo and will not come from a fresh clone:
+- the bucket must allow **public reads** (r2.dev subdomain or a custom domain);
+- its **CORS policy must allow `PUT` from the Netlify origin**, or browser uploads fail.
+
+Presigned URLs are only valid against `https://<account>.r2.cloudflarestorage.com` — never the public
+custom domain. `R2_PUBLIC_URL` is for reads only.
+
+### R2 has no image transforms
+Unlike Cloudinary, R2 stores exactly the bytes it is given. There is no `w_400` in the URL. So
+**client-side resizing in `lib/image.ts` is load-bearing**, not an optimization — remove it and full
+camera-resolution originals go straight into the bucket and back out to every feed reader.
 
 ### `GET /posts` is unpaginated
-Sorted and no longer N+1, but it still returns *every* post. Add cursor pagination before the feed
-grows.
+Sorted and no longer N+1, but it still returns *every* post. Now that images are URLs the response is
+small, so this is no longer urgent — but add cursor pagination before the feed grows.
 
 ### The JWT lives in `localStorage`
 Readable by any script on the origin. An httpOnly refresh-token cookie would be the stronger design.
@@ -74,9 +85,10 @@ infinite spinner — but the latency remains.
 
 ## 6.3 If you keep going, in priority order
 
-1. **Move images to object storage** and return URLs. Everything else is downstream of this.
+1. **Configure R2 and run the backfill.** The code is live but inert until the bucket exists.
 2. **Paginate `GET /posts`** (cursor on `createdAt`).
-3. Replace the `posts`/`comments` string ids with real `ObjectId` refs and `.populate()`.
-4. Add a `unique` index on `email` as an explicit migration.
-5. Move the JWT to an httpOnly cookie with a refresh flow.
-6. Add a linter (none ships now that `react-scripts` is gone) and client-side tests.
+3. Add `cache-control` to API responses — there is none today.
+4. Replace the `posts`/`comments` string ids with real `ObjectId` refs and `.populate()`.
+5. Add a `unique` index on `email` as an explicit migration.
+6. Move the JWT to an httpOnly cookie with a refresh flow.
+7. Add a linter (none ships now that `react-scripts` is gone) and client-side tests.

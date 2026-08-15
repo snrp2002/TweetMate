@@ -6,6 +6,7 @@ import postsRouter from './routes/posts.js';
 import authRouter from './routes/auth.js';
 import userRouter from './routes/user.js';
 import commentRouter from './routes/comments.js';
+import uploadsRouter from './routes/uploads.js';
 
 const BODY_LIMIT = '30mb';
 
@@ -26,6 +27,7 @@ export function createApp() {
   app.use('/auth', authRouter);
   app.use('/user', userRouter);
   app.use('/comments', commentRouter);
+  app.use('/uploads', uploadsRouter);
 
   app.use((_req, res) => {
     res.status(404).json({ message: 'Not found' });

@@ -274,6 +274,40 @@ check('thread readable', thread.status === 200 && thread.body.comments.length ==
 const feed2 = await call('GET', '/posts');
 check('commentCount incremented', feed2.body[0]?.commentCount === 1, feed2.body[0]?.commentCount);
 
+console.log('\n--- image uploads (R2 unconfigured in tests)');
+
+const upCfg = await call('GET', '/uploads/config');
+check(
+  'upload config reports disabled without R2 creds',
+  upCfg.status === 200 && upCfg.body.enabled === false && typeof upCfg.body.maxBytes === 'number',
+  upCfg.body,
+);
+
+const signNoAuth = await call('POST', '/uploads/sign', {
+  body: { contentType: 'image/jpeg', size: 1000 },
+});
+check('sign upload without token → 401', signNoAuth.status === 401, signNoAuth.body);
+
+const signUnconfigured = await call('POST', '/uploads/sign', {
+  token: adaToken,
+  body: { contentType: 'image/jpeg', size: 1000 },
+});
+check(
+  'sign upload → 503 when R2 is not configured',
+  signUnconfigured.status === 503,
+  signUnconfigured.body,
+);
+
+// The whole point of the fallback: posting still works with inline base64.
+const fallbackPost = await call('POST', '/posts', {
+  token: adaToken,
+  body: { message: 'inline fallback still works', image: IMAGE },
+});
+check('posting with inline base64 still works', fallbackPost.status === 201, fallbackPost.body);
+if (fallbackPost.status === 201) {
+  await call('DELETE', `/posts/${fallbackPost.body._id}`, { token: adaToken });
+}
+
 console.log('\n--- ownership');
 const foreignEdit = await call('PATCH', '/posts', {
   token: graceToken,
