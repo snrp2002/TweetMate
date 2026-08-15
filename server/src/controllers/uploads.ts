@@ -1,10 +1,5 @@
 import type { RequestHandler } from 'express';
-import {
-  createSignedUpload,
-  isAllowedContentType,
-  isR2Configured,
-  MAX_UPLOAD_BYTES,
-} from '../lib/r2.js';
+import { createSignedUpload, isStorageConfigured, MAX_UPLOAD_BYTES } from '../lib/storage.js';
 import { errorMessage } from '../lib/serialize.js';
 
 interface SignUploadBody {
@@ -12,36 +7,43 @@ interface SignUploadBody {
   size?: number;
 }
 
+const ALLOWED_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+]);
+
 /**
- * Tells the client whether direct-to-R2 uploads are available.
+ * Tells the client whether direct uploads are available.
  *
  * The client falls back to inline base64 when they are not, so the app keeps
- * working before R2 credentials are configured.
+ * working before storage credentials are configured.
  */
 export const uploadConfig: RequestHandler = (_req, res) => {
-  res.status(200).json({ enabled: isR2Configured(), maxBytes: MAX_UPLOAD_BYTES });
+  res.status(200).json({ enabled: isStorageConfigured(), maxBytes: MAX_UPLOAD_BYTES });
 };
 
 /**
- * Issues a short-lived presigned PUT so the browser uploads straight to R2.
- *
- * The bytes never touch this server, which matters on a small instance: a
+ * Signs one direct-to-Cloudinary upload so the browser can post the bytes
+ * itself. They never touch this server, which matters on a small instance: a
  * 5 MB image would otherwise be buffered in memory here first.
  */
-export const signUpload: RequestHandler = async (req, res) => {
+export const signUpload: RequestHandler = (req, res) => {
   if (!req.userId) {
     res.status(401).json({ message: 'Not Logged In!' });
     return;
   }
 
-  if (!isR2Configured()) {
+  if (!isStorageConfigured()) {
     res.status(503).json({ message: 'Image uploads are not configured on this server.' });
     return;
   }
 
   const { contentType, size } = req.body as SignUploadBody;
 
-  if (typeof contentType !== 'string' || !isAllowedContentType(contentType)) {
+  if (typeof contentType !== 'string' || !ALLOWED_TYPES.has(contentType)) {
     res.status(400).json({ message: 'Unsupported image type.' });
     return;
   }
@@ -54,7 +56,7 @@ export const signUpload: RequestHandler = async (req, res) => {
   }
 
   try {
-    res.status(200).json(await createSignedUpload(contentType));
+    res.status(200).json(createSignedUpload());
   } catch (error) {
     res.status(500).json({ message: errorMessage(error) });
   }

@@ -411,7 +411,7 @@ hardcoded Netlify URL, so links are correct in every environment.
 ## 5.13 Uploading an image
 
 `UI/Form/Image` has two modes. It asks the server which one is live, then takes that branch. The
-resize step runs either way — it is what actually shrank the payload.
+resize step runs either way.
 
 ```mermaid
 sequenceDiagram
@@ -420,7 +420,7 @@ sequenceDiagram
     participant IMG as UI/Form/Image
     participant IL as lib/image.ts
     participant API as Express API
-    participant R2 as Cloudflare R2
+    participant CLD as Cloudinary
     participant PF as PostFormContext
 
     IMG->>API: GET /uploads/config (cached by React Query)
@@ -432,15 +432,15 @@ sequenceDiagram
     IL->>IL: re-encode as JPEG q0.72
     IL-->>IMG: compressed Blob
 
-    alt R2 configured
+    alt storage configured
         IMG->>API: POST /uploads/sign { contentType, size }
         API->>API: auth guard, size + MIME check
-        API->>R2: getSignedUrl(PutObject, posts/<uuid>.jpg)
-        API-->>IMG: { uploadUrl, publicUrl }
-        IMG->>R2: PUT bytes directly (plain fetch, no JWT)
-        R2-->>IMG: 200
-        IMG->>PF: setField('image', publicUrl)
-    else R2 not configured
+        API->>API: sha1(folder + timestamp + api secret)
+        API-->>IMG: { uploadUrl, apiKey, timestamp, signature, folder }
+        IMG->>CLD: POST multipart form data
+        CLD-->>IMG: { secure_url }
+        IMG->>PF: setField('image', secure_url)
+    else storage not configured
         IMG->>IL: toBase64(blob)
         IL-->>IMG: data: URL
         IMG->>PF: setField('image', dataUrl)
@@ -451,12 +451,34 @@ Why it is shaped this way:
 
 | Decision | Reason |
 | --- | --- |
-| Browser PUTs straight to R2 | Image bytes never touch the free-tier Render instance |
-| Presigned URL, not a proxy route | No streaming, no memory spike, no request-size limit to raise |
-| Plain `fetch`, not the axios instance | The axios interceptor attaches the JWT — it must not reach R2 |
-| `isR2Configured()` gate | Unset credentials fall back to base64, so the code ships before the bucket exists |
-| Resize before either branch | 1600px is the cap that turned 2.3 MB images into ~50 KB |
-| `cache-control: immutable` on the object | Keys are content-addressed by uuid, so they can be cached forever |
+| Browser uploads straight to Cloudinary | Image bytes never touch the free-tier Render instance |
+| Server signs, never proxies | No streaming, no memory spike, no request-size limit to raise |
+| Signature covers folder + timestamp | A leaked signature cannot be replayed to write elsewhere |
+| Plain `fetch`, not the axios instance | The axios interceptor attaches the JWT — it must not reach Cloudinary |
+| `isStorageConfigured()` gate | Unset credentials fall back to base64, so the code ships before the account exists |
+| Resize before either branch | Smaller uploads on mobile, and less of the storage allowance consumed |
+
+### Delivery — where the latency actually went
+
+Uploading URLs instead of base64 is only half of it. Cloudinary resizes on delivery, so each surface
+asks for the pixels it will actually display:
+
+```mermaid
+flowchart LR
+    S["stored secure_url<br/>/image/upload/v123/tweetmate/posts/x.jpg"] --> T{"lib/cloudinary.ts"}
+    T -->|"f_auto,q_auto,c_limit,w_900"| A["feed + post detail"]
+    T -->|"f_auto,q_auto,w_600,h_600,c_fill"| B["profile grid tile"]
+    T -->|"f_auto,q_auto,w_2x,h_2x,c_fill,g_face"| C["avatar"]
+    S -->|"not a Cloudinary URL"| D["passed through unchanged<br/>(base64 fallback, default avatar)"]
+```
+
+`f_auto` serves AVIF or WebP to browsers that accept them and `q_auto` picks a per-image quality;
+`c_limit` never upscales a small original. Every helper is a no-op on non-Cloudinary values, which is
+what keeps the base64 fallback working.
+
+Deleting a post also deletes its image: `publicIdFromUrl()` recovers the id from the stored URL, so
+no second field is needed on the document. It is best-effort — an orphaned image must never make a
+post undeletable.
 
 Existing base64 posts are migrated with `npm run migrate:images` in `server/` — a dry run by default,
-`-- --apply` to write. It is idempotent: `isRemoteImage()` skips anything already on R2.
+`-- --apply` to write. It is idempotent: `isRemoteImage()` skips anything already migrated.

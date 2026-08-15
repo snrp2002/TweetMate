@@ -7,9 +7,16 @@ export interface UploadConfig {
 
 interface SignedUpload {
   uploadUrl: string;
-  publicUrl: string;
-  key: string;
+  apiKey: string;
+  timestamp: number;
+  signature: string;
+  folder: string;
   maxBytes: number;
+}
+
+interface CloudinaryResponse {
+  secure_url?: string;
+  error?: { message?: string };
 }
 
 export async function fetchUploadConfig(): Promise<UploadConfig> {
@@ -18,28 +25,30 @@ export async function fetchUploadConfig(): Promise<UploadConfig> {
 }
 
 /**
- * Uploads straight to R2 using a short-lived presigned PUT and returns the
- * public URL. The bytes never pass through our API.
+ * Uploads straight to Cloudinary with a server-issued signature and returns the
+ * delivery URL. The bytes never pass through our API.
  */
 export async function uploadImage(file: Blob): Promise<string> {
-  const contentType = file.type || 'image/jpeg';
-
   const { data: signed } = await api.post<SignedUpload>('/uploads/sign', {
-    contentType,
+    contentType: file.type || 'image/jpeg',
     size: file.size,
   });
 
+  const form = new FormData();
+  form.append('file', file);
+  form.append('api_key', signed.apiKey);
+  form.append('timestamp', String(signed.timestamp));
+  form.append('folder', signed.folder);
+  form.append('signature', signed.signature);
+
   // Sent with fetch rather than the shared axios instance so the Authorization
   // interceptor cannot leak our JWT to a third-party origin.
-  const response = await fetch(signed.uploadUrl, {
-    method: 'PUT',
-    body: file,
-    headers: { 'Content-Type': contentType },
-  });
+  const response = await fetch(signed.uploadUrl, { method: 'POST', body: form });
+  const body = (await response.json()) as CloudinaryResponse;
 
-  if (!response.ok) {
-    throw new Error(`Upload failed (${response.status})`);
+  if (!response.ok || !body.secure_url) {
+    throw new Error(body.error?.message ?? `Upload failed (${response.status})`);
   }
 
-  return signed.publicUrl;
+  return body.secure_url;
 }

@@ -185,24 +185,30 @@ Empty comments are rejected with `400`. Increments `Post.commentCount`.
 ## 3.7 Upload endpoints
 
 ### `GET /uploads/config`
-No auth. Returns `{ enabled: boolean, maxBytes: number }`. `enabled` is false when the R2 environment
-variables are unset — the client uses it to decide between a presigned upload and the base64
-fallback. `maxBytes` is 8 MB.
+No auth. Returns `{ enabled: boolean, maxBytes: number }`. `enabled` is false when the Cloudinary
+environment variables are unset — the client uses it to decide between a direct upload and the
+base64 fallback. `maxBytes` is 8 MB.
 
 ### `POST /uploads/sign` 🔒
 Body `{ contentType, size }`. Returns:
 
 ```json
 {
-  "uploadUrl": "https://<account>.r2.cloudflarestorage.com/<bucket>/posts/<uuid>.jpg?X-Amz-...",
-  "publicUrl": "https://<public-host>/posts/<uuid>.jpg",
-  "key": "posts/<uuid>.jpg"
+  "uploadUrl": "https://api.cloudinary.com/v1_1/<cloud>/image/upload",
+  "apiKey": "8929...",
+  "timestamp": 1786826353,
+  "signature": "<sha1 of the signed params + api secret>",
+  "folder": "tweetmate/posts",
+  "maxBytes": 8388608
 }
 ```
 
-`uploadUrl` is a presigned `PutObject` valid for 5 minutes; the browser PUTs the bytes there directly
-so they never pass through the API. Rejects unsupported MIME types with `400`, anything over
-`maxBytes` with `413`, and returns **`503`** when R2 is not configured.
+The browser POSTs the file to `uploadUrl` as multipart form data with those fields attached, so the
+bytes never pass through the API. The signature covers only `folder` and `timestamp`, so it cannot be
+replayed to write elsewhere, and Cloudinary rejects it after an hour. Rejects unsupported MIME types
+with `400`, anything over `maxBytes` with `413`, and returns **`503`** when storage is not configured.
+
+**The API secret never leaves the server.** Only the signature does.
 
 ## 3.8 Error conventions
 

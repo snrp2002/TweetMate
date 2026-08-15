@@ -3,6 +3,7 @@ import { Post } from '../models/posts.js';
 import { User } from '../models/user.js';
 import { Comments } from '../models/comments.js';
 import { errorMessage, loadAuthors, normalizeTags, toPostResponse } from '../lib/serialize.js';
+import { destroyImage } from '../lib/storage.js';
 import type { CreatePostBody, EditPostBody } from '../types/api.js';
 
 /** Whole feed, newest first, with each author merged in. */
@@ -154,7 +155,7 @@ export const deletePost: RequestHandler = async (req, res) => {
   const { id: postId } = req.params;
 
   try {
-    const post = await Post.findById(postId).select('creator').lean();
+    const post = await Post.findById(postId).select('creator image').lean();
     if (!post) {
       res.status(404).json({ message: 'Post not found!!' });
       return;
@@ -168,6 +169,9 @@ export const deletePost: RequestHandler = async (req, res) => {
     await Comments.deleteOne({ postId });
     // Prune from the creator's list — not the caller's.
     await User.updateOne({ _id: post.creator }, { $pull: { posts: postId } });
+
+    // Best effort: an orphaned image must never block deleting the post.
+    if (post.image) void destroyImage(post.image);
 
     res.status(200).json({ message: 'Successfully deleted the post.' });
   } catch (error) {

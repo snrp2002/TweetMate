@@ -12,6 +12,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { useLikePost } from '../../queries/posts';
 import { toErrorMessage } from '../../api/client';
 import { postUrl } from '../../config';
+import { feedImage } from '../../lib/cloudinary';
 import type { Post as PostType } from '../../types/api';
 
 interface PostProps {
@@ -76,7 +77,7 @@ export default function Post({ post, order = 0 }: PostProps) {
 
         {post.image && (
           <div className={classes.media}>
-            <img src={post.image} alt="" loading="lazy" />
+            <img src={feedImage(post.image)} alt="" loading="lazy" />
           </div>
         )}
 

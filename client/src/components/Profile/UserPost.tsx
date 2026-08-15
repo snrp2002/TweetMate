@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import classes from './UserPost.module.css';
 import Icon from '../UI/Icon';
 import { usePost } from '../../queries/posts';
+import { tileImage } from '../../lib/cloudinary';
 
 interface UserPostProps {
   postId: string;
@@ -25,7 +26,7 @@ export default function UserPost({ postId, order = 0 }: UserPostProps) {
       onClick={() => void navigate(`/post/${post._id}`)}
       aria-label={`Open post: ${post.message.slice(0, 60)}`}
     >
-      <span className={classes.image} style={{ backgroundImage: `url(${post.image})` }} />
+      <span className={classes.image} style={{ backgroundImage: `url(${tileImage(post.image)})` }} />
 
       <span className={classes.overlay}>
         <span className={classes.stat}>
