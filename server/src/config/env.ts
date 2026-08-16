@@ -52,9 +52,10 @@ export const env = {
    * routes report that they are unavailable instead of failing obscurely.
    */
   mail: {
-    apiKey: process.env['RESEND_API_KEY'] ?? '',
-    /** e.g. `TweetMate <noreply@yourdomain.com>` */
+    apiKey: process.env['BREVO_API_KEY'] ?? '',
+    /** A sender address verified in Brevo. No domain needed. */
     from: process.env['MAIL_FROM'] ?? '',
+    fromName: process.env['MAIL_FROM_NAME'] ?? 'TweetMate',
   },
 
   /** Where reset links point. Must be the deployed client origin. */
