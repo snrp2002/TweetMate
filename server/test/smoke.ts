@@ -4,16 +4,53 @@
  */
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { createHash, randomBytes } from 'node:crypto';
+import { createServer } from 'node:http';
 
 const mongod = await MongoMemoryServer.create();
 process.env['DATABASE_URL'] = mongod.getUri('tweetmate_smoke');
 process.env['JWT_SECRET'] = 'smoke-test-secret';
 process.env['PORT'] = '0';
 
+/**
+ * A stand-in for Brevo. Lets the suite read the message the app would have
+ * sent, which is the only way to test the reset end to end — pull the token
+ * out of the emailed link and spend it, exactly as a real user does.
+ */
+let lastMail: { to: string; subject: string; text: string } | null = null;
+
+const mailStub = createServer((req, res) => {
+  let body = '';
+  req.on('data', (chunk) => (body += chunk));
+  req.on('end', () => {
+    const parsed = JSON.parse(body) as {
+      to: { email: string }[];
+      subject: string;
+      textContent: string;
+    };
+    lastMail = {
+      to: parsed.to[0]?.email ?? '',
+      subject: parsed.subject,
+      text: parsed.textContent,
+    };
+    res.writeHead(201, { 'Content-Type': 'application/json' });
+    res.end('{"messageId":"stub"}');
+  });
+});
+mailStub.listen(0);
+await new Promise((resolve) => mailStub.once('listening', resolve));
+const mailAddress = mailStub.address();
+if (mailAddress === null || typeof mailAddress === 'string') throw new Error('no mail port');
+
+process.env['MAIL_API_URL'] = `http://127.0.0.1:${mailAddress.port}/`;
+process.env['BREVO_API_KEY'] = 'stub-key';
+process.env['MAIL_FROM'] = 'noreply@example.com';
+process.env['CLIENT_URL'] = 'https://client.example';
+
 const mongoose = (await import('mongoose')).default;
 const { createApp } = await import('../src/app.js');
 const { publicIdFromUrl } = await import('../src/lib/storage.js');
 const { resetRateLimits } = await import('../src/middleware/rateLimit.js');
+const { env } = await import('../src/config/env.js');
 
 mongoose.set('strictQuery', false);
 await mongoose.connect(process.env['DATABASE_URL']);
@@ -341,19 +378,113 @@ await call('POST', '/comments', {
   body: { postId, comment: { comment: 'nice work!' } },
 });
 
-console.log('\n--- password reset (mail unconfigured in tests)');
+console.log('\n--- password reset');
 
 const forgotEmpty = await call('POST', '/auth/forgot', { body: {} });
 check('forgot without an address → 400', forgotEmpty.status === 400, forgotEmpty.body);
 
+// Being explicit here is deliberate: signIn already distinguishes an unknown
+// address from a known one, so hiding it only stranded people.
+const forgotUnknown = await call('POST', '/auth/forgot', {
+  body: { email: 'nobody-at-all@example.com' },
+});
+check(
+  'forgot for an unknown address → 404, and says so',
+  forgotUnknown.status === 404 && /no account/i.test(forgotUnknown.body.message),
+  forgotUnknown.body,
+);
+
+// The whole loop: request a reset, read the emailed link, spend the token.
+lastMail = null;
+const forgotReal = await call('POST', '/auth/forgot', { body: { email: 'grace@example.com' } });
+check(
+  'forgot for a real account → 200',
+  forgotReal.status === 200 && forgotReal.body.creating === false,
+  forgotReal.body,
+);
+check('an email was actually sent', lastMail?.to === 'grace@example.com', lastMail);
+check(
+  'the email subject reflects a reset',
+  lastMail?.subject === 'Reset your TweetMate password',
+  lastMail?.subject,
+);
+
+const emailedLink = /https:\/\/\S+/.exec(lastMail?.text ?? '')?.[0] ?? '';
+check(
+  'the link points at CLIENT_URL and carries a token',
+  emailedLink.startsWith('https://client.example/reset-password?token=') &&
+    emailedLink.includes('email=grace%40example.com'),
+  emailedLink,
+);
+
+const emailedToken = new URL(emailedLink).searchParams.get('token') ?? '';
+const spendEmailed = await call('POST', '/auth/reset', {
+  body: {
+    token: emailedToken,
+    email: 'grace@example.com',
+    password: 'fromtheemail',
+    confirmPassword: 'fromtheemail',
+  },
+});
+check(
+  'the token from the email completes the reset',
+  spendEmailed.status === 200 && !!spendEmailed.body.token,
+  spendEmailed.body,
+);
+check(
+  'and the emailed password then signs in',
+  (await call('POST', '/auth/signin', {
+    body: { email: 'grace@example.com', password: 'fromtheemail' },
+  })).status === 200,
+);
+
+// A Google account has no password. It should still get a link — that is how
+// it gains one — and the copy must not tell them to "reset" what they lack.
+lastMail = null;
+const forgotGoogle = await call('POST', '/auth/forgot', { body: { email: 'alan@example.com' } });
+check(
+  'a Google-only account is offered a password instead of being stranded',
+  forgotGoogle.status === 200 && forgotGoogle.body.creating === true,
+  forgotGoogle.body,
+);
+check(
+  'and its email says set, not reset',
+  lastMail?.subject === 'Set a password for your TweetMate account',
+  lastMail?.subject,
+);
+
+const googleToken =
+  new URL(/https:\/\/\S+/.exec(lastMail?.text ?? '')?.[0] ?? 'https://x/').searchParams.get(
+    'token',
+  ) ?? '';
+const googleSet = await call('POST', '/auth/reset', {
+  body: {
+    token: googleToken,
+    email: 'alan@example.com',
+    password: 'nowihaveone',
+    confirmPassword: 'nowihaveone',
+  },
+});
+check('the Google account can now set a password', googleSet.status === 200, googleSet.body);
+check(
+  'and can then sign in with it',
+  (await call('POST', '/auth/signin', {
+    body: { email: 'alan@example.com', password: 'nowihaveone' },
+  })).status === 200,
+);
+
+// Temporarily unconfigure mail to prove the feature reports itself off.
+const savedKey = env.mail.apiKey;
+(env.mail as { apiKey: string }).apiKey = '';
 const forgotUnconfigured = await call('POST', '/auth/forgot', {
-  body: { email: 'ada@example.com' },
+  body: { email: 'grace@example.com' },
 });
 check(
   'forgot → 503 when mail is not configured',
   forgotUnconfigured.status === 503,
   forgotUnconfigured.body,
 );
+(env.mail as { apiKey: string }).apiKey = savedKey;
 
 const resetBadToken = await call('POST', '/auth/reset', {
   body: {

@@ -37,6 +37,12 @@ Kept here because the shapes still explain why the code looks the way it does.
 
 ## 6.2 Still true — know these
 
+### Account existence is readable, on purpose
+`signIn` distinguishes an unknown address (`404`) from a known one (`400`), and `signUp` says "User
+already exists!!". `/auth/forgot` now matches that rather than pretending otherwise. Closing
+enumeration means changing all three together — a half-measure protects nothing while costing real
+clarity.
+
 ### Password reset needs a mail provider
 `BREVO_API_KEY` and `MAIL_FROM` are optional. Without them `/auth/forgot` returns **503** and the UI
 says so — the flow is built but inert. Set `CLIENT_URL` too, or reset links will point at

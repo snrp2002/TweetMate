@@ -196,9 +196,19 @@ Both routes are rate limited, and both are inert unless `BREVO_API_KEY` and `MAI
 `/auth/forgot` answers **`503`** when mail is unconfigured.
 
 ### `POST /auth/forgot`
-Body `{ email }`. **Always answers `200`** with the same message whether or not the address has an
-account; saying "no such user" would turn this into an oracle for which addresses are registered.
-Google-only accounts have no password to reset and are treated the same way.
+Body `{ email }`. Returns `{ message, creating }`, or **`404`** when there is no such account.
+
+**This deliberately confirms whether an address is registered.** An earlier version answered `200`
+for everything to avoid being an enumeration oracle, but that protected nothing: `signIn` already
+replies `404 "User not found!!"` for an unknown address and `400 "Please log in via google!!"` for a
+known one. The vagueness only left people watching an inbox that would never receive anything. The
+real defence here is the rate limit — 5 per hour — not the wording. If you ever want to close
+enumeration, it has to be done across `signup`, `signin` and `forgot` together; doing one is
+worthless.
+
+`creating` is `true` for an account that signed up through Google and therefore has **no password
+yet**. Such an account still gets a link — that is how it gains one — and the email says *set* rather
+than *reset*. Completing it leaves both sign-in methods working.
 
 Generates a 32-byte token, stores only its **SHA-256 hash** plus a 30-minute expiry, and emails the
 raw token as a link. If the email fails to send, the stored token is cleared rather than left
@@ -268,7 +278,7 @@ Bodies are always `{ "message": "<text>" }`.
 | `400` | Validation failure (bad credentials, empty comment, mismatched passwords, bad upload type) |
 | `401` | Missing, malformed or expired token |
 | `403` | Authenticated, but not the owner of the resource |
-| `404` | User, post or route not found |
+| `404` | User, post, comment or route not found — including "no account for that address" |
 | `409` | Post creation failed |
 | `413` | Upload larger than the 8 MB cap |
 | `500` | Unexpected failure |

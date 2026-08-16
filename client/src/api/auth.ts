@@ -16,9 +16,11 @@ export async function signIn(input: EmailSignInInput | GoogleAuthInput): Promise
   return data;
 }
 
-/** Always resolves for a well-formed address, whether or not it has an account. */
-export async function forgotPassword(email: string): Promise<{ message: string }> {
-  const { data } = await api.post<{ message: string }>('/auth/forgot', { email });
+/** Resolves with what happened; throws 404 when there is no such account. */
+export async function forgotPassword(
+  email: string,
+): Promise<{ message: string; creating: boolean }> {
+  const { data } = await api.post<{ message: string; creating: boolean }>('/auth/forgot', { email });
   return data;
 }
 

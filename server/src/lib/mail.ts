@@ -29,7 +29,7 @@ interface Mail {
 export async function sendMail({ to, subject, text, html }: Mail): Promise<void> {
   if (!isMailConfigured()) throw new Error('Email is not configured on this server.');
 
-  const response = await fetch(ENDPOINT, {
+  const response = await fetch(env.mail.apiUrl || ENDPOINT, {
     method: 'POST',
     headers: {
       // Brevo uses its own header, not Authorization: Bearer.
@@ -52,12 +52,35 @@ export async function sendMail({ to, subject, text, html }: Mail): Promise<void>
   }
 }
 
-/** Plain text alongside HTML, so the mail survives a text-only client. */
-export function resetEmail(name: string, link: string, minutes: number) {
+/**
+ * Plain text alongside HTML, so the mail survives a text-only client.
+ *
+ * `mode` matters: a Google account has no password yet, so telling that person
+ * to "reset" one is confusing. Same link either way — completing it sets a
+ * password, after which both sign-in methods work.
+ */
+export function resetEmail(
+  name: string,
+  link: string,
+  minutes: number,
+  mode: 'reset' | 'create' = 'reset',
+) {
+  const creating = mode === 'create';
+
+  const subject = creating
+    ? 'Set a password for your TweetMate account'
+    : 'Reset your TweetMate password';
+
+  const opening = creating
+    ? 'You asked to set a password for your TweetMate account. Until now it has signed in with Google — adding a password means either will work.'
+    : 'Someone asked to reset your TweetMate password. Open this link to choose a new one:';
+
+  const action = creating ? 'Set password' : 'Reset password';
+
   const text = [
     `Hi ${name},`,
     '',
-    'Someone asked to reset your TweetMate password. Open this link to choose a new one:',
+    opening,
     link,
     '',
     `The link stops working in ${minutes} minutes and can only be used once.`,
@@ -67,12 +90,12 @@ export function resetEmail(name: string, link: string, minutes: number) {
   const html = `
     <div style="font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.6;color:#1a1a1a;max-width:520px">
       <p>Hi ${escapeHtml(name)},</p>
-      <p>Someone asked to reset your TweetMate password. Choose a new one here:</p>
+      <p>${escapeHtml(opening)}</p>
       <p>
         <a href="${escapeHtml(link)}"
            style="display:inline-block;background:#e0a458;color:#100d08;padding:11px 20px;
                   border-radius:8px;text-decoration:none;font-weight:600">
-          Reset password
+          ${action}
         </a>
       </p>
       <p style="color:#666;font-size:13px">
@@ -86,7 +109,7 @@ export function resetEmail(name: string, link: string, minutes: number) {
     </div>
   `.trim();
 
-  return { subject: 'Reset your TweetMate password', text, html };
+  return { subject, text, html };
 }
 
 function escapeHtml(value: string): string {
