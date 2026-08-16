@@ -139,8 +139,12 @@ function hashResetToken(token: string): string {
 /**
  * Starts a password reset.
  *
- * Always answers 200, whether or not the address exists. Saying "no such user"
- * would turn this into an oracle for which email addresses have accounts.
+ * This used to answer 200 for every address to avoid confirming which ones
+ * have accounts. That protected nothing: `signIn` already replies "User not
+ * found!!" for an unknown address and "Please log in via google!!" for a known
+ * one, so existence is freely readable two endpoints away. All the vagueness
+ * did was leave people staring at an inbox that would never receive anything.
+ * The real defence here is the rate limit, not the wording.
  */
 export const forgotPassword: RequestHandler = async (req, res) => {
   const email = (req.body as { email?: string }).email?.trim().toLowerCase();
@@ -155,17 +159,17 @@ export const forgotPassword: RequestHandler = async (req, res) => {
     return;
   }
 
-  const generic = { message: 'If that address has an account, a reset link is on its way.' };
-
   try {
     const user = await User.findOne({ email });
 
-    // A Google-only account has no password to reset; treat it like a miss so
-    // the response stays uniform.
-    if (!user || !user.password) {
-      res.status(200).json(generic);
+    if (!user) {
+      res.status(404).json({ message: 'There is no account for that address.' });
       return;
     }
+
+    // A Google account has no password yet. Sending the link anyway turns a
+    // dead end into the way to add one — afterwards either method works.
+    const creating = !user.password;
 
     const token = randomBytes(32).toString('hex');
     user.resetTokenHash = hashResetToken(token);
@@ -173,7 +177,12 @@ export const forgotPassword: RequestHandler = async (req, res) => {
     await user.save();
 
     const link = `${env.clientUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
-    const { subject, text, html } = resetEmail(user.name, link, RESET_TTL_MINUTES);
+    const { subject, text, html } = resetEmail(
+      user.name,
+      link,
+      RESET_TTL_MINUTES,
+      creating ? 'create' : 'reset',
+    );
 
     try {
       await sendMail({ to: email, subject, text, html });
@@ -185,7 +194,12 @@ export const forgotPassword: RequestHandler = async (req, res) => {
       throw mailError;
     }
 
-    res.status(200).json(generic);
+    res.status(200).json({
+      message: creating
+        ? 'That account signs in with Google. We have sent a link so you can add a password.'
+        : 'A reset link is on its way. It expires in 30 minutes.',
+      creating,
+    });
   } catch (error) {
     res.status(500).json({ message: errorMessage(error) });
   }

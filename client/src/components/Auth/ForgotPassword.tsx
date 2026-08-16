@@ -15,7 +15,7 @@ import { toErrorMessage } from '../../api/client';
 export default function ForgotPassword({ onBack }: { onBack: () => void }) {
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState<{ message: string; creating: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -25,8 +25,7 @@ export default function ForgotPassword({ onBack }: { onBack: () => void }) {
     setBusy(true);
     setError(null);
     try {
-      await forgotPassword(email.trim());
-      setSent(true);
+      setSent(await forgotPassword(email.trim()));
     } catch (requestError) {
       setError(toErrorMessage(requestError, 'Could not send the reset link.'));
     } finally {
@@ -37,10 +36,12 @@ export default function ForgotPassword({ onBack }: { onBack: () => void }) {
   if (sent) {
     return (
       <div>
-        <h2 className={classes.asideTitle}>Check your inbox</h2>
+        <h2 className={classes.asideTitle}>
+          {sent.creating ? 'Add a password' : 'Check your inbox'}
+        </h2>
+        <p className={classes.asideText}>{sent.message}</p>
         <p className={classes.asideText}>
-          If <b>{email.trim()}</b> has an account, a reset link is on its way. It expires in 30
-          minutes.
+          Sent to <b>{email.trim()}</b>.
         </p>
         <div className={classes.submit}>
           <Button type="button" onClick={onBack}>

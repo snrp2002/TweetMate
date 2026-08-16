@@ -56,6 +56,8 @@ export const env = {
     /** A sender address verified in Brevo. No domain needed. */
     from: process.env['MAIL_FROM'] ?? '',
     fromName: process.env['MAIL_FROM_NAME'] ?? 'TweetMate',
+    /** Overridable so tests can point at a local stub instead of the network. */
+    apiUrl: process.env['MAIL_API_URL'] ?? 'https://api.brevo.com/v3/smtp/email',
   },
 
   /** Where reset links point. Must be the deployed client origin. */
