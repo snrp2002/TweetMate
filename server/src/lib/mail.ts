@@ -1,15 +1,19 @@
 import { env } from '../config/env.js';
 
 /**
- * Transactional email through Resend's HTTP API.
+ * Transactional email through Brevo's HTTP API.
  *
- * Deliberately no SDK: it is one POST, and the dependency would only wrap
+ * Brevo rather than Resend because it verifies a single sender address by
+ * emailed link, with no domain and no DNS records. Resend's shared test domain
+ * refuses any recipient except the account owner, which would have made
+ * password reset work for exactly one person.
+ *
+ * Deliberately no SDK: this is one POST, and the dependency would only wrap
  * fetch. Optional in the same way storage is — with no API key configured the
- * app still runs, and the routes that need mail say so plainly rather than
- * failing in a confusing way.
+ * app still runs, and the routes that need mail say so plainly.
  */
 
-const ENDPOINT = 'https://api.resend.com/emails';
+const ENDPOINT = 'https://api.brevo.com/v3/smtp/email';
 
 export function isMailConfigured(): boolean {
   return Boolean(env.mail.apiKey && env.mail.from);
@@ -28,10 +32,18 @@ export async function sendMail({ to, subject, text, html }: Mail): Promise<void>
   const response = await fetch(ENDPOINT, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${env.mail.apiKey}`,
+      // Brevo uses its own header, not Authorization: Bearer.
+      'api-key': env.mail.apiKey,
       'Content-Type': 'application/json',
+      Accept: 'application/json',
     },
-    body: JSON.stringify({ from: env.mail.from, to: [to], subject, text, html }),
+    body: JSON.stringify({
+      sender: { name: env.mail.fromName, email: env.mail.from },
+      to: [{ email: to }],
+      subject,
+      textContent: text,
+      htmlContent: html,
+    }),
   });
 
   if (!response.ok) {
@@ -62,6 +74,10 @@ export function resetEmail(name: string, link: string, minutes: number) {
                   border-radius:8px;text-decoration:none;font-weight:600">
           Reset password
         </a>
+      </p>
+      <p style="color:#666;font-size:13px">
+        Or paste this into your browser:<br />
+        <span style="word-break:break-all">${escapeHtml(link)}</span>
       </p>
       <p style="color:#666;font-size:14px">
         The link stops working in ${minutes} minutes and can only be used once.<br />
