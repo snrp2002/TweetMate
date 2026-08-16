@@ -38,9 +38,18 @@ Kept here because the shapes still explain why the code looks the way it does.
 ## 6.2 Still true — know these
 
 ### Password reset needs a mail provider
-`RESEND_API_KEY` and `MAIL_FROM` are optional. Without them `/auth/forgot` returns **503** and the UI
+`BREVO_API_KEY` and `MAIL_FROM` are optional. Without them `/auth/forgot` returns **503** and the UI
 says so — the flow is built but inert. Set `CLIENT_URL` too, or reset links will point at
 `localhost:3000`.
+
+**Brevo, not Resend, and for a specific reason.** Resend will only deliver to the account owner's own
+address until you verify a domain, so a reset built on it would work for exactly one person. Brevo
+verifies a single sender by emailed link, with no domain and no DNS.
+
+The trade is that an unauthenticated sender gets rewritten: mail arrives from
+`snrp2002@<id>.brevosend.com` rather than the address in `MAIL_FROM`. Delivery and inbox placement
+are fine — verified against Gmail — but authenticating a domain in Brevo would remove the rewrite.
+Free tier is 300 emails a day.
 
 ### Rate limit counters are per-process and in memory
 They reset on every deploy and would multiply across instances. Fine for one free-tier instance,

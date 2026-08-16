@@ -192,7 +192,7 @@ updated thread. `commentCount` is decremented under a `{ $gt: 0 }` guard so it c
 
 ## 3.7 Password reset
 
-Both routes are rate limited, and both are inert unless `RESEND_API_KEY` and `MAIL_FROM` are set —
+Both routes are rate limited, and both are inert unless `BREVO_API_KEY` and `MAIL_FROM` are set —
 `/auth/forgot` answers **`503`** when mail is unconfigured.
 
 ### `POST /auth/forgot`
